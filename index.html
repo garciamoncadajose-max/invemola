@@ -90,6 +90,27 @@
 
             <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
             <ul id="lista-productos"></ul>
+                    <section class="lista-productos">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
+                <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
+            </div>
+
+            <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
+            <ul id="lista-productos"></ul>
+
+            <!-- NUEVO: BOTONES DE PAGINACIÓN -->
+            <div id="controles-paginacion" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                <button id="btn-anterior" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">⬅️ Ant.</button>
+                <span id="info-pagina" style="font-weight: bold; color: #2c3e50;">Página 1 de 1</span>
+                <button id="btn-siguiente" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">Sig. ➡️</button>
+            </div>
+        </section>
+
         </section>
 
     </main>

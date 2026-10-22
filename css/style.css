@@ -1,12 +1,11 @@
-/* Variables de color y tipografía */
 :root {
-    --color-principal: #2c3e50;
+    --color-principal: #1e272e; /* Gris Grafito Oscuro */
     --color-secundario: #e67e22;
-    --color-fondo: #f8f9fa;
+    --color-fondo: #f1f2f6;     /* Fondo gris claro */
     --color-tarjeta: #ffffff;
-    --color-texto: #333333;
-    --color-alerta: #e74c3c;
-    --color-borde: #dddddd;
+    --color-texto: #2c3e50;
+    --color-alerta: #ff4757;
+    --color-borde: #c8d6e5;
 }
 
 body {
@@ -24,58 +23,95 @@ body {
     padding: 2rem 1rem;
 }
 
-.encabezado h1 { margin: 0; font-size: 2.2rem; }
-.encabezado p { margin: 0.5rem 0 0 0; opacity: 0.8; }
+.encabezado h1 { margin: 0; font-size: 2rem; font-weight: 800; }
+.encabezado p { margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 1rem; }
 
 .contenedor {
     max-width: 1000px;
-    margin: 2rem auto;
+    margin: 1.5rem auto;
     padding: 0 1rem;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
-/* Responsivo: pantallas grandes divididas en dos columnas */
-@media (min-width: 768px) {
-    .contenedor {
-        grid-template-columns: 1fr 1fr;
-    }
-    .resumen { grid-column: span 2; }
-}
-
-/* Tarjetas de Resumen */
+/* --- TARJETAS DE RESUMEN CORREGIDAS --- */
 .tarjetas {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
+    /* En móviles se ponen en dos columnas para que tengan espacio y no se desconfiguren */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
     margin-top: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .tarjeta {
     background: var(--color-tarjeta);
-    padding: 1.5rem;
+    padding: 1rem 0.3rem;
     border-radius: 8px;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border-top: 4px solid var(--color-principal);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #e1e2f6;
+    box-sizing: border-box;
 }
 
-.tarjeta:nth-child(2) { border-top-color: var(--color-secundario); }
-.tarjeta:nth-child(3) { border-top-color: var(--color-alerta); }
+/* Hacer que la primera tarjeta (Productos) ocupe todo el ancho en pantallas muy pequeñas */
+.tarjetas article:nth-child(1) {
+    grid-column: span 2;
+}
 
-.tarjeta h3 { margin: 0; font-size: 1rem; color: #666; }
-.tarjeta p { margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: bold; }
+.tarjeta h3 { 
+    margin: 0; 
+    font-size: 0.8rem; 
+    color: #57606f; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+}
 
-/* Formularios y Secciones */
+.tarjeta p { 
+    margin: 0.2rem 0 0 0; 
+    font-size: 1.8rem; 
+    font-weight: bold; 
+}
+
+/* Responsivo para pantallas grandes: Computadoras y Tablets */
+@media (min-width: 768px) {
+    .contenedor { 
+        grid-template-columns: 1fr 1fr; 
+    }
+    .resumen { 
+        grid-column: span 2; 
+    }
+    .tarjetas {
+        /* En pantallas grandes sí se ponen las 3 en una fila horizontal impecable */
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .tarjetas article:nth-child(1) {
+        grid-column: span 1;
+    }
+}
+
+/* --- CLASES DE ALERTA MÁXIMA --- */
+.tarjeta-alerta-critica {
+    background-color: #ff4757 !important; /* Rojo intenso */
+    color: #ffffff !important;
+    border-color: #ff4757 !important;
+}
+
+.tarjeta-alerta-critica h3 {
+    color: #ffffff !important;
+    opacity: 0.9;
+}
+
+/* --- SECCIONES Y FORMULARIOS --- */
 section {
     background: white;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-sizing: border-box;
 }
-
-section h2 { margin-top: 0; border-bottom: 2px solid var(--color-fondo); padding-bottom: 0.5rem; }
 
 form label { display: block; margin: 0.8rem 0 0.2rem 0; font-weight: 600; }
 form input, form select {
@@ -97,130 +133,52 @@ form button {
     font-size: 1rem;
     cursor: pointer;
     font-weight: bold;
-    transition: background 0.2s;
 }
 
-form button:hover { background-color: #d35400; }
-
-/* Lista de productos */
+/* --- LISTA DE PRODUCTOS --- */
 ul { list-style: none; padding: 0; margin: 0; }
 .producto-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid var(--color-fondo);
+    border-bottom: 1px solid #f1f2f6;
+    border-radius: 6px;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-sizing: border-box;
 }
 
 .producto-info h4 { margin: 0; font-size: 1.1rem; }
-.producto-info p { margin: 0.2rem 0 0 0; font-size: 0.9rem; color: #666; }
-
-/* Estados especiales (Alertas) */
+.producto-info p { margin: 0.2rem 0 0 0; font-size: 0.9rem; color: #57606f; }
 .alerta-stock { color: var(--color-secundario); font-weight: bold; }
 .alerta-caducado { color: var(--color-alerta); font-weight: bold; }
-/* Estilos para los botones de acción en la lista */
-.producto-acciones {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-}
 
-.grupo-botones {
-    display: flex;
-    gap: 0.3rem;
-}
+/* BORDES DE CATEGORÍAS VIBRANTES */
+.cat-carnes { border-left: 6px solid #ff4757 !important; background-color: #fff2f3; }
+.cat-verduras { border-left: 6px solid #2ed573 !important; background-color: #f1fbf5; }
+.cat-lacteos { border-left: 6px solid #ffa502 !important; background-color: #fffaf1; }
+.cat-bebidas { border-left: 6px solid #1e90ff !important; background-color: #f1f8ff; }
+.cat-otros { border-left: 6px solid #747d8c !important; background-color: #f8f9fa; }
 
-.btn-accion {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
+.producto-acciones { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
 
-.btn-accion:active {
-    transform: scale(0.95);
-}
-
-.btn-recibir { background-color: #2ecc71; color: white; }
-.btn-recibir:hover { background-color: #27ae60; }
-
-.btn-usar { background-color: #f39c12; color: white; }
-.btn-usar:hover { background-color: #d35400; }
-
-.btn-eliminar { background-color: #e74c3c; color: white; }
-.btn-eliminar:hover { background-color: #c0392b; }
-
-/* Estilos para los botones de acción en la lista */
-.producto-acciones {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-}
-
-.grupo-botones {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.btn-accion {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.btn-accion:active {
-    transform: scale(0.95);
-}
-
-.btn-recibir { background-color: #2ecc71; color: white; }
-.btn-recibir:hover { background-color: #27ae60; }
-
-.btn-usar { background-color: #f39c12; color: white; }
-.btn-usar:hover { background-color: #d35400; }
-
-.btn-eliminar { background-color: #e74c3c; color: white; }
-.btn-eliminar:hover { background-color: #c0392b; }
-
-/* Ajuste responsivo para que en pantallas pequeñas no se amontone */
-@media (max-width: 480px) {
-    .producto-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    .producto-acciones {
-        width: 100%;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-/* Colores e identificadores por Categoría */
-.cat-carnes { border-left: 6px solid #ff7675 !important; background-color: #fff5f5; }
-.cat-verduras { border-left: 6px solid #55efc4 !important; background-color: #f4fffb; }
-.cat-lacteos { border-left: 6px solid #ffeaa7 !important; background-color: #fffdf6; }
-.cat-bebidas { border-left: 6px solid #74b9ff !important; background-color: #f5faff; }
-.cat-otros { border-left: 6px solid #b2bec3 !important; background-color: #fafafa; }
-
-/* Ajuste para que el borde se vea redondeado y estilizado */
-.producto-item {
-    border-radius: 4px;
+/* --- BANNERS DE NOTIFICACIÓN DE ALERTA --- */
+.notificacion-alarma {
+    background-color: #ff4757;
+    color: white;
+    padding: 0.8rem;
     margin-bottom: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    border-left: 5px solid #c0392b;
+    box-sizing: border-box;
+}
+
+/* Adaptación para pantallas extremadamente pequeñas */
+@media (max-width: 480px) {
+    .producto-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .producto-acciones { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
 }

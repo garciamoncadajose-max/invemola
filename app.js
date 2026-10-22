@@ -20,7 +20,7 @@ if (formulario) {
         const nombre = document.getElementById('nombre').value;
         const cantidad = parseFloat(document.getElementById('cantidad').value);
         const unidad = document.getElementById('unidad').value;
-        const categoria = document.getElementById('categoria').value; // NUEVO
+        const categoria = document.getElementById('categoria').value;
         const stockMinimo = parseFloat(document.getElementById('stock-minimo').value);
         const caducidad = document.getElementById('caducidad').value;
 
@@ -29,7 +29,7 @@ if (formulario) {
             nombre,
             cantidad,
             unidad,
-            categoria, // NUEVO
+            categoria,
             stockMinimo,
             caducidad
         };
@@ -88,8 +88,7 @@ function eliminarProducto(id) {
     }
 }
 
-// 3. Exportación nativa a archivo de Excel (Incluye Categoría)
-// 3. Exportación nativa a archivo de Excel (Corregida y blindada contra datos antiguos)
+// 3. Exportación nativa a archivo de Excel
 function exportarAExcel() {
     if (productos.length === 0) {
         alert("Agrega al menos un producto para exportar.");
@@ -102,9 +101,7 @@ function exportarAExcel() {
     }
 
     const datosExcel = productos.map(p => {
-        // Blindaje: Si el producto es viejo y no tiene categoría, le asigna "OTROS"
         const categoriaTexto = p.categoria ? p.categoria.toUpperCase() : "OTROS";
-
         return {
             "Nombre del Producto": p.nombre,
             "Categoría": categoriaTexto,
@@ -119,10 +116,8 @@ function exportarAExcel() {
     const hoja = XLSX.utils.json_to_sheet(datosExcel);
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Inventario");
-
     XLSX.writeFile(libro, `Reporte_Inventario.xlsx`);
 }
-
 
 // 4. Sincronizar con LocalStorage y repintar pantalla
 function guardarYActualizar() {
@@ -134,6 +129,16 @@ function actualizarInterfaz() {
     if (!listaProductos) return;
     listaProductos.innerHTML = '';
 
+    // Buscar o crear dinámicamente un contenedor para los mensajes de alarma
+    let contenedorAlarmas = document.getElementById('panel-alarmas');
+    if (!contenedorAlarmas) {
+        contenedorAlarmas = document.createElement('div');
+        contenedorAlarmas.id = 'panel-alarmas';
+        contenedorAlarmas.style.marginTop = '1rem';
+        document.querySelector('.resumen').appendChild(contenedorAlarmas);
+    }
+    contenedorAlarmas.innerHTML = ''; // Limpiar alarmas anteriores
+
     if (productos.length === 0) {
         mensajeVacio.style.display = 'block';
         btnExportar.style.display = 'none';
@@ -142,6 +147,10 @@ function actualizarInterfaz() {
         totalProductosTxt.textContent = "0";
         stockBajoTxt.textContent = "0";
         porCaducarTxt.textContent = "0";
+        
+        // Resetear colores de tarjetas si está vacío
+        stockBajoTxt.parentElement.className = "tarjeta";
+        porCaducarTxt.parentElement.className = "tarjeta";
         return;
     } else {
         mensajeVacio.style.display = 'none';
@@ -150,40 +159,40 @@ function actualizarInterfaz() {
     }
 
     const terminoBusqueda = buscador ? buscador.value.toLowerCase() : "";
-
     const productosFiltrados = productos.filter(prod => 
         prod.nombre.toLowerCase().includes(terminoBusqueda)
     );
 
-    let contadorStockBajo = 0;
-    let contadorPorCaducar = 0;
     const hoy = new Date();
+    let naciendoMensajesAlarma = "";
 
     productosFiltrados.forEach(prod => {
         const li = document.createElement('li');
-        
-        // NUEVO: Asigna una clase de CSS de color basada en el valor de la categoría
         const claseCategoria = `cat-${prod.categoria || 'otros'}`;
         li.className = `producto-item ${claseCategoria}`;
 
         const esStockBajo = prod.cantidad <= prod.stockMinimo;
-        if (esStockBajo) contadorStockBajo++;
-
+        
         let esCriticoCaducidad = false;
         let infoCaducidad = 'No registra';
 
         if (prod.caducidad) {
             const fechaCad = new Date(prod.caducidad);
-            const diferenciaTiempo = fechaCad - hoy;
-            const diferenciaDias = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
+            const diferenciaDias = Math.ceil((fechaCad - hoy) / (1000 * 60 * 60 * 24));
             infoCaducidad = prod.caducidad;
             if (diferenciaDias <= 3) {
                 esCriticoCaducidad = true;
-                contadorPorCaducar++;
             }
         }
 
-        // Se añadió el texto visual de la categoría abajo del nombre
+        // NUEVO: Si detecta peligro, construye un mensaje de alarma en texto
+        if (esStockBajo) {
+            naciendoMensajesAlarma += `<div class="notificacion-alarma">⚠️ ALERTA STOCK: Quedan solo ${prod.cantidad} ${prod.unidad} de "${prod.nombre}". Reabastecer urgente.</div>`;
+        }
+        if (esCriticoCaducidad) {
+            naciendoMensajesAlarma += `<div class="notificacion-alarma">🚨 ALERTA CADUCIDAD: El lote de "${prod.nombre}" vence pronto (${infoCaducidad}). Revisar frescura.</div>`;
+        }
+
         li.innerHTML = `
             <div class="producto-info">
                 <h4>${prod.nombre}</h4>
@@ -206,6 +215,12 @@ function actualizarInterfaz() {
         listaProductos.appendChild(li);
     });
 
+    // Inyectar los mensajes de alarma recolectados en el panel
+    if (naciendoMensajesAlarma !== "") {
+        contenedorAlarmas.innerHTML = naciendoMensajesAlarma;
+    }
+
+    // Calcular contadores globales completos
     let totalBajoGlobal = productos.filter(p => p.cantidad <= p.stockMinimo).length;
     let totalCaducarGlobal = productos.filter(p => {
         if (!p.caducidad) return false;
@@ -216,6 +231,19 @@ function actualizarInterfaz() {
     totalProductosTxt.textContent = productos.length;
     stockBajoTxt.textContent = totalBajoGlobal;
     porCaducarTxt.textContent = totalCaducarGlobal;
+
+    // NUEVO: CAMBIO DE COLOR COMPLETO EN LAS TARJETA AL LLEGAR AL LÍMITE
+    if (totalBajoGlobal > 0) {
+        stockBajoTxt.parentElement.className = "tarjeta tarjeta-alerta-critica";
+    } else {
+        stockBajoTxt.parentElement.className = "tarjeta";
+    }
+
+    if (totalCaducarGlobal > 0) {
+        porCaducarTxt.parentElement.className = "tarjeta tarjeta-alerta-critica";
+    } else {
+        porCaducarTxt.parentElement.className = "tarjeta";
+    }
 }
 
 actualizarInterfaz();

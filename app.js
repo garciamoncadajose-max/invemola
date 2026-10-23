@@ -1,30 +1,26 @@
+/* global createClient */
 // ==========================================================================
-// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (CONEXIÓN OFICIAL EN LÍNEA)
+// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (CONEXIÓN LÍNEA REPARADA)
 // ==========================================================================
 const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
 
-// Inicializador blindado compatible con cualquier navegador móvil
-let clienteSupabase = null;
-if (typeof supabase !== 'undefined' && supabase.createClient) {
-    clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else if (typeof createClient !== 'undefined') {
-    clienteSupabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-}
+// CORRECTO: Se eliminó la redundancia para evitar el congelamiento en celulares
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // Arreglo global de datos
 let productos = [];
 let usuarioActivo = null;
 
-// BASE DE DATOS DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
+// 1. BASE DE DATOS DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
 const nominaEmpleados = {
-    "1234": { nombre: "María (Encargada)", rol: "encargada" },
-    "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
-    "2001": { nombre: "Juan (Cocinero 1)", rol: "cocinero" },
-    "2002": { nombre: "Pedro (Cocinero 2)", rol: "cocinero" },
-    "2003": { nombre: "Luis (Cocinero 3)", rol: "cocinero" },
-    "2004": { nombre: "Andrés (Cocinero 4)", rol: "cocinero" },
-    "2005": { nombre: "José (Cocinero 5)", rol: "cocinero" }
+    "1234": { nombre: "Gaby (Encargada)", rol: "encargada" },
+    "8881": { nombre: "Cheo (Almacenista)", rol: "almacenista" },
+    "2001": { nombre: "Juaco (Cocinero 1)", rol: "cocinero" },
+    "2002": { nombre: "Yenni (Cocinero 2)", rol: "cocinero" },
+    "2003": { nombre: "Jhon (Cocinero 3)", rol: "cocinero" },
+    "2004": { nombre: "Desire (Cocinero 4)", rol: "cocinero" },
+    "2005": { nombre: "Cris (Cocinero 5)", rol: "cocinero" }
 };
 
 let paginaActual = 1;

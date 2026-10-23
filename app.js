@@ -1,5 +1,5 @@
 /* global createClient */
-const SUPABASE_URL = "https://supabase.co"; 
+const SUPABASE_URL = "https://pejeyknmlfimglapyvxw.supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let productos = [], usuarioActivo = null, paginaActual = 1; const pPorPag = 5;
@@ -27,6 +27,28 @@ async function consultarDatosDeInternet() {
     if (!error && data) { productos = data; actualizarInterfaz(); }
 }
 
+const botonIngresar = document.getElementById('btn-entrar');
+if (botonIngresar) {
+    botonIngresar.onclick = function() {
+        const pin = document.getElementById('pin-acceso').value;
+        if (nominaEmpleados[pin]) {
+            usuarioActivo = nominaEmpleados[pin];
+            document.getElementById('pantalla-login').style.display = 'none';
+            document.getElementById('app-principal').style.display = 'block';
+            document.getElementById('pin-acceso').value = "";
+            const hP = document.querySelector('.encabezado p');
+            if (hP) hP.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
+            configurarPermisosPorRol(); consultarDatosDeInternet();
+        } else { alert("❌ PIN Inválido."); }
+    };
+}
+
+if (document.getElementById('btn-cerrar-sesion')) {
+    document.getElementById('btn-cerrar-sesion').addEventListener('click', function() {
+        usuarioActivo = null; document.getElementById('app-principal').style.display = 'none'; document.getElementById('pantalla-login').style.display = 'block';
+    });
+}
+
 if (lProd) {
     lProd.addEventListener('click', async function(e) {
         const b = e.target.closest('button'); if (!b) return;
@@ -42,27 +64,6 @@ if (lProd) {
         } else if (op === 'eliminar' && confirm("¿Eliminar artículo?")) {
             await supabase.from('productos').delete().eq('id', id); consultarDatosDeInternet();
         }
-    });
-}
-
-if (document.getElementById('btn-entrar')) {
-    document.getElementById('btn-entrar').addEventListener('click', function() {
-        const pin = document.getElementById('pin-acceso').value;
-        if (nominaEmpleados[pin]) {
-            usuarioActivo = nominaEmpleados[pin];
-            document.getElementById('pantalla-login').style.display = 'none';
-            document.getElementById('app-principal').style.display = 'block';
-            document.getElementById('pin-acceso').value = "";
-            const hP = document.querySelector('.encabezado p');
-            if (hP) hP.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
-            configurarPermisosPorRol(); consultarDatosDeInternet();
-        } else { alert("❌ PIN Inválido."); }
-    });
-}
-
-if (document.getElementById('btn-cerrar-sesion')) {
-    document.getElementById('btn-cerrar-sesion').addEventListener('click', function() {
-        usuarioActivo = null; document.getElementById('app-principal').style.display = 'none'; document.getElementById('pantalla-login').style.display = 'block';
     });
 }
 

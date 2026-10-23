@@ -1,15 +1,10 @@
 /* global createClient */
-// ==========================================================================
-// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (CONEXIÓN OFICIAL EN LÍNEA)
-// ==========================================================================
 const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-let productos = [], usuarioActivo = null, paginaActual = 1;
-const productosPorPagina = 5;
+let productos = [], usuarioActivo = null, paginaActual = 1; const productosPorPagina = 5;
 
-// NÓMINA DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
 const nominaEmpleados = {
     "1234": { nombre: "María (Encargada)", rol: "encargada" },
     "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
@@ -39,6 +34,31 @@ async function consultarDatosDeInternet() {
     if (!error && data) { productos = data; actualizarInterfaz(); }
 }
 
+// CAPTURADOR DE EVENTOS ESTRUCTURADO PARA OPERACIONES EN LA LISTA
+if (listaProductos) {
+    listaProductos.addEventListener('click', async function(e) {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const id = parseInt(btn.dataset.id); const operacion = btn.dataset.operacion;
+        const p = productos.find(x => x.id === id); if (!p) return;
+
+        if (operacion === 'sumar') {
+            const cant = parseFloat(prompt(`¿Cuánto vas a añadir de ${p.nombre}?`));
+            if (!isNaN(cant) && cant > 0) {
+                await supabase.from('productos').update({ cantidad: parseFloat(((parseFloat(p.cantidad)||0) + cant).toFixed(2)) }).eq('id', id);
+                consultarDatosDeInternet();
+            }
+        } else if (operacion === 'restar') {
+            const cant = parseFloat(prompt(`¿Cuánto vas a descontar de ${p.nombre}?`)); const act = parseFloat(p.cantidad) || 0;
+            if (!isNaN(cant) && cant > 0 && act >= cant) {
+                await supabase.from('productos').update({ cantidad: parseFloat((act - cant).toFixed(2)) }).eq('id', id);
+                consultarDatosDeInternet();
+            } else if (act < cant) { alert("Cantidad insuficiente."); }
+        } else if (operacion === 'eliminar') {
+            if (confirm("¿Eliminar artículo?")) { await supabase.from('productos').delete().eq('id', id); consultarDatosDeInternet(); }
+        }
+    });
+}
+
 if (document.getElementById('btn-entrar')) {
     document.getElementById('btn-entrar').addEventListener('click', function() {
         const pin = document.getElementById('pin-acceso').value;
@@ -49,24 +69,20 @@ if (document.getElementById('btn-entrar')) {
             document.getElementById('pin-acceso').value = "";
             const hP = document.querySelector('.encabezado p');
             if (hP) hP.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
-            configurarPermisosPorRol(); 
-            consultarDatosDeInternet();
+            configurarPermisosPorRol(); consultarDatosDeInternet();
         } else { alert("❌ PIN Inválido."); }
     });
 }
 
 if (document.getElementById('btn-cerrar-sesion')) {
     document.getElementById('btn-cerrar-sesion').addEventListener('click', function() {
-        usuarioActivo = null; 
-        document.getElementById('app-principal').style.display = 'none'; 
-        document.getElementById('pantalla-login').style.display = 'block';
+        usuarioActivo = null; document.getElementById('app-principal').style.display = 'none'; document.getElementById('pantalla-login').style.display = 'block';
     });
 }
 
 if (formulario) {
     formulario.addEventListener('submit', async function(e) {
-        e.preventDefault(); 
-        if (!supabase) return;
+        e.preventDefault(); if (!supabase) return;
         const nuevoProd = {
             nombre: document.getElementById('nombre').value,
             cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
@@ -79,41 +95,6 @@ if (formulario) {
         const { error } = await supabase.from('productos').insert([nuevoProd]);
         if (!error) { formulario.reset(); document.getElementById('stock-minimo').value = "1"; consultarDatosDeInternet(); }
     });
-}
-
-async function sumarStock(id, txt = "añadir") {
-    if (!supabase) return; 
-    const p = productos.find(x => x.id === id);
-    if (p) {
-        const cant = parseFloat(prompt(`¿Cuánto vas a ${txt} de ${p.nombre}?`));
-        if (!isNaN(cant) && cant > 0) {
-            const act = parseFloat(p.cantidad) || 0;
-            await supabase.from('productos').update({ cantidad: parseFloat((act + cant).toFixed(2)) }).eq('id', id);
-            consultarDatosDeInternet();
-        }
-    }
-}
-
-async function avanzarP(tot) { 
-    if (paginaActual < tot) { paginaActual++; actualizarInterfaz(); } 
-}
-
-async function restarStock(id, txt = "sacar") {
-    if (!supabase) return; 
-    const p = productos.find(x => x.id === id);
-    if (p) {
-        const cant = parseFloat(prompt(`¿Cuánto vas a ${txt} de ${p.nombre}?`)); 
-        const act = parseFloat(p.cantidad) || 0;
-        if (!isNaN(cant) && cant > 0 && act >= cant) {
-            await supabase.from('productos').update({ cantidad: parseFloat((act - cant).toFixed(2)) }).eq('id', id);
-            consultarDatosDeInternet();
-        } else if (act < cant) { alert("Error: Cantidad insuficiente."); }
-    }
-}
-
-async function eliminarProducto(id) {
-    if (!supabase) return; 
-    if (confirm("¿Eliminar artículo?")) { await supabase.from('productos').delete().eq('id', id); consultarDatosDeInternet(); }
 }
 
 if (buscador) buscador.addEventListener('input', () => { paginaActual = 1; actualizarInterfaz(); });
@@ -136,8 +117,7 @@ function configurarPermisosPorRol() {
 }
 
 function actualizarInterfaz() {
-    if (!listaProductos) return; 
-    listaProductos.innerHTML = '';
+    if (!listaProductos) return; listaProductos.innerHTML = '';
     let cAl = document.getElementById('panel-alarmas');
     if (!cAl) {
         cAl = document.createElement('div'); cAl.id = 'panel-alarmas'; cAl.style.marginTop = '1rem';
@@ -153,19 +133,15 @@ function actualizarInterfaz() {
         mensajeVacio.style.display = 'none'; if (buscador) buscador.style.display = 'block'; if (controlesPaginacion) controlesPaginacion.style.display = 'flex';
     }
 
-    const term = buscador ? buscador.value.toLowerCase() : ""; 
-    const fil = productos.filter(x => x.nombre && x.nombre.toLowerCase().includes(term));
-    const totPag = Math.ceil(fil.length / productosPorPagina) || 1; 
-    if (paginaActual > totPag) paginaActual = totPag;
-    const idx = (paginaActual - 1) * productosPorPagina; 
-    const vis = fil.slice(idx, idx + productosPorPagina);
+    const term = buscador ? buscador.value.toLowerCase() : ""; const fil = productos.filter(x => x.nombre && x.nombre.toLowerCase().includes(term));
+    const totPag = Math.ceil(fil.length / productosPorPagina) || 1; if (paginaActual > totPag) paginaActual = totPag;
+    const idx = (paginaActual - 1) * productosPorPagina; const vis = fil.slice(idx, idx + productosPorPagina);
 
     if (infoPagina) infoPagina.textContent = `Página ${paginaActual} de ${totPag}`;
     if (btnAnterior) btnAnterior.disabled = (paginaActual === 1);
 
     const clonSig = btnSiguiente.cloneNode(true); btnSiguiente.parentNode.replaceChild(clonSig, btnSiguiente);
-    clonSig.disabled = (paginaActual === totPag); 
-    clonSig.addEventListener('click', () => avanzarP(totPag));
+    clonSig.disabled = (paginaActual === totPag); clonSig.addEventListener('click', () => { if (paginaActual < totPag) { paginaActual++; actualizarInterfaz(); } });
 
     const hoy = new Date(); let msgAl = ""; const uRol = usuarioActivo ? usuarioActivo.rol : "";
 
@@ -177,8 +153,9 @@ function actualizarInterfaz() {
 
         let btnH = "";
         if (uRol === 'encargada') {
-            btnH = `<button onclick="sumarStock(${p.id})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➕</button>
-                    <button onclick="restarStock(${p.id})" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➖</button>
-                    <button onclick="eliminarProducto(${p.id})" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>`;
+            btnH = `<button data-id="${p.id}" data-operacion="sumar" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➕</button>
+                    <button data-id="${p.id}" data-operacion="restar" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➖</button>
+                    <button data-id="${p.id}" data-operacion="eliminar" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>`;
         } else if (uRol === 'almacenista') {
-            btnH = `<button onclick="sumarStock(${p.id}, 'recibir')" style="background:#2ecc71; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold; margin-right:5px;">📥 Recibir</button>
+            btnH = `<button data-id="${p.id}" data-operacion="sumar" style="background:#2ecc71; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold; margin-right:5px;">📥 Recibir</button>
+                    <button data-id="${p.id}" data-operacion="restar" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold;">📤 Sacar</button>`;

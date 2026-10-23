@@ -7,13 +7,13 @@ let productos = [], usuarioActivo = null, paginaActual = 1;
 const productosPorPagina = 5;
 
 const nominaEmpleados = {
-    "1234": { nombre: "Gaby (Encargada)", rol: "encargada" },
-    "8881": { nombre: "Cheo (Almacenista)", rol: "almacenista" },
-    "2001": { nombre: "Yenni (Cocinero 1)", rol: "cocinero" },
-    "2002": { nombre: "Jhon (Cocinero 2)", rol: "cocinero" },
-    "2003": { nombre: "Desi (Cocinero 3)", rol: "cocinero" },
-    "2004": { nombre: "Cris (Cocinero 4)", rol: "cocinero" },
-    "2005": { nombre: "Yasm (Cocinero 5)", rol: "cocinero" }
+    "1234": { nombre: "María (Encargada)", rol: "encargada" },
+    "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
+    "2001": { nombre: "Juan (Cocinero 1)", rol: "cocinero" },
+    "2002": { nombre: "Pedro (Cocinero 2)", rol: "cocinero" },
+    "2003": { nombre: "Luis (Cocinero 3)", rol: "cocinero" },
+    "2004": { nombre: "Andrés (Cocinero 4)", rol: "cocinero" },
+    "2005": { nombre: "José (Cocinero 5)", rol: "cocinero" }
 };
 
 const formulario = document.getElementById('formulario-producto');
@@ -117,7 +117,6 @@ if (btnExportar) btnExportar.addEventListener('click', () => {
 });
 
 function configurarPermisosPorRol() {
-    if (!usuarioActivo) return;
     const sF = document.querySelector('.formulario'), sR = document.querySelector('.resumen');
     if (usuarioActivo.rol === 'encargada') {
         if (sF) sF.style.display = 'block'; if (sR) sR.style.display = 'block'; if (btnExportar) btnExportar.style.display = 'block';

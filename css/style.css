@@ -1,160 +1,51 @@
 :root {
-    --color-principal: #1e272e; /* Gris Grafito Oscuro */
+    --color-principal: #1e272e;
     --color-secundario: #e67e22;
-    --color-fondo: #f1f2f6;     /* Fondo gris claro */
+    --color-fondo: #f1f2f6;
     --color-tarjeta: #ffffff;
     --color-texto: #2c3e50;
     --color-alerta: #ff4757;
     --color-borde: #c8d6e5;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--color-fondo);
-    color: var(--color-texto);
-    margin: 0;
-    padding: 0;
-}
-
-.encabezado {
-    background-color: var(--color-principal);
-    color: white;
-    text-align: center;
-    padding: 2rem 1rem;
-}
-
+body { font-family: 'Segoe UI', sans-serif; background-color: var(--color-fondo); color: var(--color-texto); margin: 0; padding: 0; }
+.encabezado { background-color: var(--color-principal); color: white; text-align: center; padding: 2rem 1rem; }
 .encabezado h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .encabezado p { margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 1rem; }
 
-.contenedor {
-    max-width: 1000px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}
+.contenedor { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
 
-/* --- TARJETAS DE RESUMEN CORREGIDAS --- */
-.tarjetas {
-    display: grid;
-    /* En móviles se ponen en dos columnas para que tengan espacio y no se desconfiguren */
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-    margin-top: 1rem;
-    width: 100%;
-    box-sizing: border-box;
-}
+.logo-contenedor { display: flex; justify-content: center; margin-bottom: 1rem; }
+.logo-app { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+.logo-header-contenedor { display: flex; justify-content: center; margin-bottom: 0.5rem; }
+.logo-header { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; background-color: #ffffff; padding: 3px; }
 
-.tarjeta {
-    background: var(--color-tarjeta);
-    padding: 1rem 0.3rem;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #e1e2f6;
-    box-sizing: border-box;
-}
+.tarjetas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 1rem; width: 100%; box-sizing: border-box; }
+.tarjeta { background: var(--color-tarjeta); padding: 1rem 0.3rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e2f6; box-sizing: border-box; }
+.tarjetas article:nth-child(1) { grid-column: span 2; }
+.tarjeta h3 { margin: 0; font-size: 0.8rem; color: #57606f; text-transform: uppercase; }
+.tarjeta p { margin: 0.2rem 0 0 0; font-size: 1.8rem; font-weight: bold; }
 
-/* Hacer que la primera tarjeta (Productos) ocupe todo el ancho en pantallas muy pequeñas */
-.tarjetas article:nth-child(1) {
-    grid-column: span 2;
-}
-
-.tarjeta h3 { 
-    margin: 0; 
-    font-size: 0.8rem; 
-    color: #57606f; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px;
-}
-
-.tarjeta p { 
-    margin: 0.2rem 0 0 0; 
-    font-size: 1.8rem; 
-    font-weight: bold; 
-}
-
-/* Responsivo para pantallas grandes: Computadoras y Tablets */
 @media (min-width: 768px) {
-    .contenedor { 
-        grid-template-columns: 1fr 1fr; 
-    }
-    .resumen { 
-        grid-column: span 2; 
-    }
-    .tarjetas {
-        /* En pantallas grandes sí se ponen las 3 en una fila horizontal impecable */
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .tarjetas article:nth-child(1) {
-        grid-column: span 1;
-    }
+    .contenedor { grid-template-columns: 1fr 1fr; }
+    .resumen { grid-column: span 2; }
+    .tarjetas { grid-template-columns: repeat(3, 1fr); }
+    .tarjetas article:nth-child(1) { grid-column: span 1; }
 }
 
-/* --- CLASES DE ALERTA MÁXIMA --- */
-.tarjeta-alerta-critica {
-    background-color: #ff4757 !important; /* Rojo intenso */
-    color: #ffffff !important;
-    border-color: #ff4757 !important;
-}
-
-.tarjeta-alerta-critica h3 {
-    color: #ffffff !important;
-    opacity: 0.9;
-}
-
-/* --- SECCIONES Y FORMULARIOS --- */
-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    box-sizing: border-box;
-}
-
+.tarjeta-alerta-critica { background-color: #ff4757 !important; color: #ffffff !important; border-color: #ff4757 !important; }
+section { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box; }
 form label { display: block; margin: 0.8rem 0 0.2rem 0; font-weight: 600; }
-form input, form select {
-    width: 100%;
-    padding: 0.7rem;
-    border: 1px solid var(--color-borde);
-    border-radius: 4px;
-    box-sizing: border-box;
-}
+form input, form select { width: 100%; padding: 0.7rem; border: 1px solid var(--color-borde); border-radius: 4px; box-sizing: border-box; }
+form button { width: 100%; background-color: var(--color-secundario); color: white; border: none; padding: 0.8rem; margin-top: 1.5rem; border-radius: 4px; font-size: 1rem; cursor: pointer; font-weight: bold; }
 
-form button {
-    width: 100%;
-    background-color: var(--color-secundario);
-    color: white;
-    border: none;
-    padding: 0.8rem;
-    margin-top: 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-/* --- LISTA DE PRODUCTOS --- */
 ul { list-style: none; padding: 0; margin: 0; }
-.producto-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #f1f2f6;
-    border-radius: 6px;
-    margin-bottom: 0.6rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    box-sizing: border-box;
-}
-
+.producto-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #f1f2f6; border-radius: 6px; margin-bottom: 0.6rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); box-sizing: border-box; }
 .producto-info h4 { margin: 0; font-size: 1.1rem; }
 .producto-info p { margin: 0.2rem 0 0 0; font-size: 0.9rem; color: #57606f; }
 .alerta-stock { color: var(--color-secundario); font-weight: bold; }
 .alerta-caducado { color: var(--color-alerta); font-weight: bold; }
 
-/* BORDES DE CATEGORÍAS VIBRANTES */
 .cat-carnes { border-left: 6px solid #ff4757 !important; background-color: #fff2f3; }
 .cat-verduras { border-left: 6px solid #2ed573 !important; background-color: #f1fbf5; }
 .cat-lacteos { border-left: 6px solid #ffa502 !important; background-color: #fffaf1; }
@@ -162,57 +53,9 @@ ul { list-style: none; padding: 0; margin: 0; }
 .cat-otros { border-left: 6px solid #747d8c !important; background-color: #f8f9fa; }
 
 .producto-acciones { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+.notificacion-alarma { background-color: #ff4757; color: white; padding: 0.8rem; margin-bottom: 0.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-left: 5px solid #c0392b; box-sizing: border-box; }
 
-/* --- BANNERS DE NOTIFICACIÓN DE ALERTA --- */
-.notificacion-alarma {
-    background-color: #ff4757;
-    color: white;
-    padding: 0.8rem;
-    margin-bottom: 0.5rem;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    border-left: 5px solid #c0392b;
-    box-sizing: border-box;
-}
-
-/* Adaptación para pantallas extremadamente pequeñas */
 @media (max-width: 480px) {
     .producto-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .producto-acciones { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
-}
-/* ==========================================================================
-   ESTILOS PARA EL LOGO DE INVENTARIO MOLAREPA
-   ========================================================================== */
-
-/* Logo en la pantalla de Login */
-.logo-contenedor {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-}
-
-.logo-app {
-    width: 120px;          /* Tamaño ideal para la pantalla de acceso */
-    height: 120px;
-    object-fit: cover;     /* Mantiene la proporción de la imagen */
-    border-radius: 50%;    /* Hace el logo redondo (opcional, quítalo si es cuadrado) */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* Logo dentro del encabezado principal */
-.logo-header-contenedor {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-}
-
-.logo-header {
-    width: 70px;           /* Más compacto para que no ocupe demasiado espacio arriba */
-    height: 70px;
-    object-fit: cover;
-    border-radius: 50%;
-    background-color: #ffffff; /* Le da un fondo blanco por si el header es oscuro */
-    padding: 3px;
 }

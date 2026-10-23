@@ -1,15 +1,22 @@
 // ==========================================================================
-// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (RESTABLECIDA Y REPARADA)
+// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (CONEXIÓN OFICIAL EN LÍNEA)
 // ==========================================================================
-const SUPABASE_URL = "https://pejeyknmlfimglapyvxw.supabase.co"; 
+const SUPABASE_URL = "https://supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
-const supabase = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Inicializador blindado compatible con cualquier navegador móvil
+let clienteSupabase = null;
+if (typeof supabase !== 'undefined' && supabase.createClient) {
+    clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} else if (typeof createClient !== 'undefined') {
+    clienteSupabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
 // Arreglo global de datos
 let productos = [];
-let usuarioActivo = null; // Guardará el objeto del empleado logueado
+let usuarioActivo = null;
 
-// 1. BASE DE DATOS DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
+// BASE DE DATOS DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
 const nominaEmpleados = {
     "1234": { nombre: "María (Encargada)", rol: "encargada" },
     "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
@@ -20,11 +27,10 @@ const nominaEmpleados = {
     "2005": { nombre: "José (Cocinero 5)", rol: "cocinero" }
 };
 
-// Variables para paginación
 let paginaActual = 1;
 const productosPorPagina = 5;
 
-// Captura de elementos de la interfaz (DOM)
+// Captura de elementos del DOM
 const pantallaLogin = document.getElementById('pantalla-login');
 const appPrincipal = document.getElementById('app-principal');
 const btnEntrar = document.getElementById('btn-entrar');
@@ -44,16 +50,16 @@ const totalProductosTxt = document.getElementById('total-productos');
 const stockBajoTxt = document.getElementById('stock-bajo');
 const porCaducarTxt = document.getElementById('por-caducar');
 
-// Sincronizar datos de la nube
 async function consultarDatosDeInternet() {
-    const { data, error } = await supabase.from('productos').select('*');
+    if (!clienteSupabase) return;
+    const { data, error } = await clienteSupabase.from('productos').select('*');
     if (!error && data) {
         productos = data;
         actualizarInterfaz();
     }
 }
 
-// CONTROL DE LOGIN UNIFICADO (CORREGIDO SIN DUPLICADOS)
+// CONTROL DE LOGIN CORREGIDO PARA PROCESAR EL PIN EN EL ACTO
 if (btnEntrar) {
     btnEntrar.addEventListener('click', function() {
         const pinIngresado = document.getElementById('pin-acceso').value;
@@ -86,10 +92,10 @@ if (btnCerrarSesion) {
     });
 }
 
-// Registrar producto nuevo en la nube
 if (formulario) {
     formulario.addEventListener('submit', async function(e) {
         e.preventDefault();
+        if (!clienteSupabase) return;
 
         const nuevoProd = {
             nombre: document.getElementById('nombre').value,
@@ -97,10 +103,11 @@ if (formulario) {
             unidad: document.getElementById('unidad').value,
             categoria: document.getElementById('categoria').value,
             stockMinimo: parseFloat(document.getElementById('stock-minimo').value),
-            caducidad: document.getElementById('caducidad').value
+            caducidad: document.getElementById('caducidad').value,
+            usuario: usuarioActivo ? usuarioActivo.nombre : "Desconocido" // Guarda quién lo registró
         };
 
-        const { error } = await supabase.from('productos').insert([nuevoProd]);
+        const { error } = await clienteSupabase.from('productos').insert([nuevoProd]);
         if (!error) {
             formulario.reset();
             document.getElementById('stock-minimo').value = "1";
@@ -109,27 +116,28 @@ if (formulario) {
     });
 }
 
-// FUNCIONES OPERATIVAS PARA ALMACÉN Y PRODUCCIÓN
 async function sumarStock(id, accionTexto = "añadir al stock") {
+    if (!clienteSupabase) return;
     const producto = productos.find(p => p.id === id);
     if (producto) {
         const cantidadASumar = parseFloat(prompt(`¿Cuánto vas a ${accionTexto} de ${producto.nombre}?`));
         if (!isNaN(cantidadASumar) && cantidadASumar > 0) {
             const nuevaCantidad = parseFloat((producto.cantidad + cantidadASumar).toFixed(2));
-            await supabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
+            await clienteSupabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
             consultarDatosDeInternet();
         }
     }
 }
 
 async function restarStock(id, accionTexto = "usar o sacar") {
+    if (!clienteSupabase) return;
     const producto = productos.find(p => p.id === id);
     if (producto) {
         const cantidadARestar = parseFloat(prompt(`¿Cuánto vas a ${accionTexto} de ${producto.nombre}?`));
         if (!isNaN(cantidadARestar) && cantidadARestar > 0) {
             if (producto.cantidad >= cantidadARestar) {
                 const nuevaCantidad = parseFloat((producto.cantidad - cantidadARestar).toFixed(2));
-                await supabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
+                await clienteSupabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
                 consultarDatosDeInternet();
             } else {
                 alert("Error: No hay suficiente cantidad en el inventario.");
@@ -139,8 +147,9 @@ async function restarStock(id, accionTexto = "usar o sacar") {
 }
 
 async function eliminarProducto(id) {
+    if (!clienteSupabase) return;
     if (confirm("¿Eliminar este artículo de la nube?")) {
-        await supabase.from('productos').delete().eq('id', id);
+        await clienteSupabase.from('productos').delete().eq('id', id);
         consultarDatosDeInternet();
     }
 }
@@ -199,7 +208,6 @@ function configurarPermisosPorRol() {
     }
 }
 
-// INTERFAZ RENDERIZADA COMPLETA (RECONSTRUIDA SIN CORTES)
 function actualizarInterfaz() {
     if (!listaProductos) return;
     listaProductos.innerHTML = '';
@@ -237,9 +245,3 @@ function actualizarInterfaz() {
     if (paginaActual > totalPaginas) paginaActual = totalPaginas;
 
     const idxIni = (paginaActual - 1) * productosPorPagina;
-    const visibles = filtrados.slice(idxIni, idxIni + productosPorPagina);
-
-    if (infoPagina) infoPagina.textContent = `Página ${paginaActual} de ${totalPaginas}`;
-    if (btnAnterior) btnAnterior.disabled = (paginaActual === 1);
-    if (btnAnterior) btnAnterior.style.opacity = (paginaActual === 1) ? "0.5" : "1";
-    

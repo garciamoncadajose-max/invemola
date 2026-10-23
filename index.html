@@ -4,38 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario Molarepa</title>
-    <script>
-        // Si la aplicación tiene un error, lo mostrará en un cuadro gigante en tu celular
-        window.onerror = function(message, source, lineno, colno, error) {
-            alert("🚨 ERROR DETECTADO:\n" + message + "\nEn línea: " + lineno);
-            return false;
-        };
-    </script>
     <!-- Tu archivo de estilos CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <!-- REPARADO: Una sola pantalla de login ágil y directa por PIN personal -->
+    <!-- Pantalla de Inicio de Sesión -->
     <section id="pantalla-login" style="max-width: 400px; margin: 5rem auto; padding: 2rem; text-align: center; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
         <div class="logo-contenedor">
             <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-app">
         </div>
         <h2>Inventario Molarepa</h2>
         <p>Introduce tu PIN personal de seguridad</p>
-        
         <input type="password" id="pin-acceso" maxlength="4" placeholder="••••" style="width:100%; padding:0.7rem; text-align:center; font-size:1.5rem; letter-spacing:5px; border:1px solid #dddddd; border-radius:4px; margin-bottom:1.5rem;">
-
         <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
     </section>
 
-    <!-- Contenedor principal de la aplicación (Oculto al inicio) -->
+    <!-- Contenedor Principal de la App -->
     <div id="app-principal" style="display: none;">
-        
-        <!-- ENCABEZADO PRINCIPAL DE LA APP -->
         <header class="encabezado">
             <button id="btn-cerrar-sesion" style="float: right; background: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Salir</button>
-            
             <div class="logo-header-contenedor">
                 <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-header">
             </div>
@@ -46,35 +34,20 @@
         <main class="contenedor">
             <section class="resumen">
                 <h2>Resumen del inventario</h2>
-
                 <div class="tarjetas">
-                    <article class="tarjeta">
-                        <h3>Productos</h3>
-                        <p id="total-productos">0</p>
-                    </article>
-
-                    <article class="tarjeta">
-                        <h3>Stock bajo</h3>
-                        <p id="stock-bajo">0</p>
-                    </article>
-
-                    <article class="tarjeta">
-                        <h3>Por caducar</h3>
-                        <p id="por-caducar">0</p>
-                    </article>
+                    <article class="tarjeta"><h3>Productos</h3><p id="total-productos">0</p></article>
+                    <article class="tarjeta"><h3>Stock bajo</h3><p id="stock-bajo">0</p></article>
+                    <article class="tarjeta"><h3>Por caducar</h3><p id="por-caducar">0</p></article>
                 </div>
             </section>
 
             <section class="formulario">
                 <h2>Registrar producto</h2>
-
                 <form id="formulario-producto">
                     <label for="nombre">Nombre del Producto</label>
                     <input type="text" id="nombre" placeholder="Ej. Pechuga de pollo" required>
-
                     <label for="cantidad">Cantidad inicial</label>
                     <input type="number" id="cantidad" min="0.01" step="any" required>
-
                     <label for="unidad">Unidad de medida</label>
                     <select id="unidad" required>
                         <option value="kg">Kilogramos (kg)</option>
@@ -83,7 +56,6 @@
                         <option value="ud">Unidades (ud)</option>
                         <option value="bolsas">Bolsas (bl)</option>
                     </select>
-
                     <label for="categoria">Categoría</label>
                     <select id="categoria" required>
                         <option value="carnes">🥩 Carnes y Aves</option>
@@ -92,13 +64,10 @@
                         <option value="bebidas">🥤 Bebidas</option>
                         <option value="otros">📦 Otros / Almacén</option>
                     </select>
-
                     <label for="stock-minimo">Stock mínimo</label>
                     <input type="number" id="stock-minimo" min="0" step="any" value="1" required>
-
                     <label for="caducidad">Fecha de caducidad</label>
                     <input type="date" id="caducidad">
-
                     <button type="submit">Añadir producto</button>
                 </form>
             </section>
@@ -108,15 +77,11 @@
                     <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
                     <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
                 </div>
-
                 <div style="margin-bottom: 1.5rem;">
                     <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
                 </div>
-
                 <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
                 <ul id="lista-productos"></ul>
-
-                <!-- BOTONES DE PAGINACIÓN -->
                 <div id="controles-paginacion" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
                     <button id="btn-anterior" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">⬅️ Ant.</button>
                     <span id="info-pagina" style="font-weight: bold; color: #2c3e50;">Página 1 de 1</span>
@@ -126,7 +91,7 @@
         </main>
     </div>
 
-    <!-- LIBRERÍAS DE CONEXIÓN CON INTERNET Y EXCEL -->
+    <!-- Librerías de Conexión -->
     <script src="xlsx.full.min.js.txt"></script>
     <script src="https://cloudflare.com"></script>
     <script src="app.js"></script>

@@ -1,21 +1,30 @@
-// CORRECCIÓN FINAL DE LA URL (Se eliminó "/rest/v1/")
+// ==========================================================================
+// CONFIGURACIÓN DE TU BASE DE DATOS EN LA NUBE (RESTABLECIDA Y REPARADA)
+// ==========================================================================
 const SUPABASE_URL = "https://pejeyknmlfimglapyvxw.supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
+const supabase = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// El resto de tu código de app.js sigue exactamente igual abajo...
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Arreglo local que se sincronizará con internet
+// Arreglo global de datos
 let productos = [];
-let rolActivo = null;
+let usuarioActivo = null; // Guardará el objeto del empleado logueado
 
-const usuariosValidos = {
-    "encargada": "1234",
-    "almacenista": "5555",
-    "cocinero": "0000"
+// 1. BASE DE DATOS DE LOS 7 EMPLEADOS CON PIN INDIVIDUAL
+const nominaEmpleados = {
+    "1234": { nombre: "María (Encargada)", rol: "encargada" },
+    "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
+    "2001": { nombre: "Juan (Cocinero 1)", rol: "cocinero" },
+    "2002": { nombre: "Pedro (Cocinero 2)", rol: "cocinero" },
+    "2003": { nombre: "Luis (Cocinero 3)", rol: "cocinero" },
+    "2004": { nombre: "Andrés (Cocinero 4)", rol: "cocinero" },
+    "2005": { nombre: "José (Cocinero 5)", rol: "cocinero" }
 };
 
-// Captura de elementos del DOM
+// Variables para paginación
+let paginaActual = 1;
+const productosPorPagina = 5;
+
+// Captura de elementos de la interfaz (DOM)
 const pantallaLogin = document.getElementById('pantalla-login');
 const appPrincipal = document.getElementById('app-principal');
 const btnEntrar = document.getElementById('btn-entrar');
@@ -26,11 +35,16 @@ const mensajeVacio = document.getElementById('mensaje-vacio');
 const btnExportar = document.getElementById('btn-exportar');
 const buscador = document.getElementById('buscador');
 
+const controlesPaginacion = document.getElementById('controles-paginacion');
+const btnAnterior = document.getElementById('btn-anterior');
+const btnSiguiente = document.getElementById('btn-siguiente');
+const infoPagina = document.getElementById('info-pagina');
+
 const totalProductosTxt = document.getElementById('total-productos');
 const stockBajoTxt = document.getElementById('stock-bajo');
 const porCaducarTxt = document.getElementById('por-caducar');
 
-// Función para descargar los datos reales desde internet (Reemplaza a LocalStorage)
+// Sincronizar datos de la nube
 async function consultarDatosDeInternet() {
     const { data, error } = await supabase.from('productos').select('*');
     if (!error && data) {
@@ -39,27 +53,40 @@ async function consultarDatosDeInternet() {
     }
 }
 
-// Control del Login
+// CONTROL DE LOGIN UNIFICADO (CORREGIDO SIN DUPLICADOS)
 if (btnEntrar) {
     btnEntrar.addEventListener('click', function() {
-        const rolSeleccionado = document.getElementById('select-rol').value;
         const pinIngresado = document.getElementById('pin-acceso').value;
 
-        if (usuariosValidos[rolSeleccionado] === pinIngresado) {
-            rolActivo = rolSeleccionado;
+        if (nominaEmpleados[pinIngresado]) {
+            usuarioActivo = nominaEmpleados[pinIngresado];
+            
             pantallaLogin.style.display = 'none';
             appPrincipal.style.display = 'block';
             document.getElementById('pin-acceso').value = "";
             
+            const parrafoEncabezado = document.querySelector('.encabezado p');
+            if (parrafoEncabezado) {
+                parrafoEncabezado.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
+            }
+            
             configurarPermisosPorRol();
-            consultarDatosDeInternet(); // Descarga los datos frescos de la nube al entrar
+            consultarDatosDeInternet();
         } else {
-            alert("❌ PIN de seguridad incorrecto.");
+            alert("❌ PIN Inválido. No corresponde a ningún empleado registrado.");
         }
     });
 }
 
-// Guardar producto nuevo en la nube (Almacenista / Encargada)
+if (btnCerrarSesion) {
+    btnCerrarSesion.addEventListener('click', function() {
+        usuarioActivo = null;
+        appPrincipal.style.display = 'none';
+        pantallaLogin.style.display = 'block';
+    });
+}
+
+// Registrar producto nuevo en la nube
 if (formulario) {
     formulario.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -73,128 +100,146 @@ if (formulario) {
             caducidad: document.getElementById('caducidad').value
         };
 
-        // Inserta el producto en la base de datos de internet
         const { error } = await supabase.from('productos').insert([nuevoProd]);
         if (!error) {
             formulario.reset();
             document.getElementById('stock-minimo').value = "1";
-            consultarDatosDeInternet(); // Refresca la pantalla
+            consultarDatosDeInternet();
         }
     });
 }
 
-// Operaciones en la nube mediante los botones del teléfono
-async function sumarStock(id) {
+// FUNCIONES OPERATIVAS PARA ALMACÉN Y PRODUCCIÓN
+async function sumarStock(id, accionTexto = "añadir al stock") {
     const producto = productos.find(p => p.id === id);
     if (producto) {
-        const cantidadASumar = parseFloat(prompt(`¿Cuánto vas a añadir al stock de ${producto.nombre}?`));
+        const cantidadASumar = parseFloat(prompt(`¿Cuánto vas a ${accionTexto} de ${producto.nombre}?`));
         if (!isNaN(cantidadASumar) && cantidadASumar > 0) {
             const nuevaCantidad = parseFloat((producto.cantidad + cantidadASumar).toFixed(2));
-            
-            // Actualiza la nube
             await supabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
             consultarDatosDeInternet();
         }
     }
 }
 
-async function restarStock(id) {
+async function restarStock(id, accionTexto = "usar o sacar") {
     const producto = productos.find(p => p.id === id);
     if (producto) {
-        const cantidadARestar = parseFloat(prompt(`¿Cuánto vas a sacar de ${producto.nombre}?`));
+        const cantidadARestar = parseFloat(prompt(`¿Cuánto vas a ${accionTexto} de ${producto.nombre}?`));
         if (!isNaN(cantidadARestar) && cantidadARestar > 0) {
             if (producto.cantidad >= cantidadARestar) {
                 const nuevaCantidad = parseFloat((producto.cantidad - cantidadARestar).toFixed(2));
-                
-                // Actualiza la nube
                 await supabase.from('productos').update({ cantidad: nuevaCantidad }).eq('id', id);
                 consultarDatosDeInternet();
             } else {
-                alert("No hay suficiente stock en el local.");
+                alert("Error: No hay suficiente cantidad en el inventario.");
             }
         }
     }
 }
 
 async function eliminarProducto(id) {
-    if (confirm("¿Eliminar este artículo permanentemente de la nube?")) {
+    if (confirm("¿Eliminar este artículo de la nube?")) {
         await supabase.from('productos').delete().eq('id', id);
         consultarDatosDeInternet();
     }
 }
 
-// Configuración de visualización por roles
+if (buscador) {
+    buscador.addEventListener('input', function() {
+        paginaActual = 1;
+        actualizarInterfaz(); 
+    });
+}
+
+if (btnAnterior) {
+    btnAnterior.addEventListener('click', function() {
+        if (paginaActual > 1) {
+            paginaActual--;
+            actualizarInterfaz();
+        }
+    });
+}
+
+function avanzarPagina(totalPaginas) {
+    if (paginaActual < totalPaginas) {
+        paginaActual++;
+        actualizarInterfaz();
+    }
+}
+
+if (btnExportar) {
+    btnExportar.addEventListener('click', exportarAExcel);
+}
+
+function exportarAExcel() {
+    if (productos.length === 0) return;
+    const datosExcel = productos.map(p => ({
+        "Nombre": p.nombre, "Categoría": (p.categoria || "").toUpperCase(), "Cantidad": p.cantidad, "Unidad": p.unidad, "Mínimo": p.stockMinimo, "Vence": p.caducidad || "No registra"
+    }));
+    const hoja = XLSX.utils.json_to_sheet(datosExcel);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Inventario");
+    XLSX.writeFile(libro, `Inventario_Molarepa.xlsx`);
+}
+
 function configurarPermisosPorRol() {
     const seccionFormulario = document.querySelector('.formulario');
     const seccionResumen = document.querySelector('.resumen');
     const botonExcel = document.getElementById('btn-exportar');
 
-    if (rolActivo === 'cocinero') {
-        if (seccionFormulario) seccionFormulario.style.display = 'none';
-        if (seccionResumen) seccionResumen.style.display = 'none';
-        if (botonExcel) botonExcel.style.display = 'none';
-    } else if (rolActivo === 'almacenista') {
-        if (seccionFormulario) seccionFormulario.style.display = 'block';
-        if (seccionResumen) seccionResumen.style.display = 'none';
-        if (botonExcel) botonExcel.style.display = 'none';
-    } else if (rolActivo === 'encargada') {
+    if (usuarioActivo.rol === 'encargada') {
         if (seccionFormulario) seccionFormulario.style.display = 'block';
         if (seccionResumen) seccionResumen.style.display = 'block';
         if (botonExcel) botonExcel.style.display = 'block';
+    } else {
+        if (seccionFormulario) seccionFormulario.style.display = 'none';
+        if (seccionResumen) seccionResumen.style.display = 'none';
+        if (botonExcel) botonExcel.style.display = 'none';
     }
 }
 
-// Renderizado de la lista
+// INTERFAZ RENDERIZADA COMPLETA (RECONSTRUIDA SIN CORTES)
 function actualizarInterfaz() {
     if (!listaProductos) return;
     listaProductos.innerHTML = '';
 
+    let contenedorAlarmas = document.getElementById('panel-alarmas');
+    if (!contenedorAlarmas) {
+        contenedorAlarmas = document.createElement('div');
+        contenedorAlarmas.id = 'panel-alarmas';
+        contenedorAlarmas.style.marginTop = '1rem';
+        const seccionResumen = document.querySelector('.resumen');
+        if (seccionResumen) seccionResumen.appendChild(contenedorAlarmas);
+    }
+    contenedorAlarmas.innerHTML = ''; 
+
     if (productos.length === 0) {
         mensajeVacio.style.display = 'block';
         btnExportar.style.display = 'none';
+        if (buscador) buscador.style.display = 'none';
+        if (controlesPaginacion) controlesPaginacion.style.display = 'none';
+        
+        totalProductosTxt.textContent = "0";
+        stockBajoTxt.textContent = "0";
+        porCaducarTxt.textContent = "0";
         return;
     } else {
         mensajeVacio.style.display = 'none';
+        if (buscador) buscador.style.display = 'block';
+        if (controlesPaginacion) controlesPaginacion.style.display = 'flex';
     }
 
     const terminoBusqueda = buscador ? buscador.value.toLowerCase() : "";
     const filtrados = productos.filter(p => p.nombre.toLowerCase().includes(terminoBusqueda));
 
-    const hoy = new Date();
-    filtrados.forEach(prod => {
-        const li = document.createElement('li');
-        li.className = `producto-item cat-${prod.categoria || 'otros'}`;
+    const totalPaginas = Math.ceil(filtrados.length / productosPorPagina) || 1;
+    if (paginaActual > totalPaginas) paginaActual = totalPaginas;
 
-        const esBajo = prod.cantidad <= prod.stockMinimo;
+    const idxIni = (paginaActual - 1) * productosPorPagina;
+    const visibles = filtrados.slice(idxIni, idxIni + productosPorPagina);
 
-        let botonesHtml = "";
-        if (rolActivo === 'encargada') {
-            botonesHtml = `
-                <button onclick="sumarStock(${prod.id})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➕</button>
-                <button onclick="restarStock(${prod.id})" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➖</button>
-                <button onclick="eliminarProducto(${prod.id})" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>
-            `;
-        } else if (rolActivo === 'almacenista') {
-            botonesHtml = `<button onclick="sumarStock(${prod.id})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➕ Recibir</button>`;
-        } else if (rolActivo === 'cocinero') {
-            botonesHtml = `<button onclick="restarStock(${prod.id})" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➖ Sacar</button>`;
-        }
-
-        li.innerHTML = `
-            <div class="producto-info">
-                <h4>${prod.nombre}</h4>
-                <p style="font-size:0.8rem; color:#888; text-transform: uppercase; margin:0;">🏷️ ${prod.categoria || 'otros'}</p>
-            </div>
-            <div class="producto-acciones">
-                <span style="font-size: 1.1rem; font-weight:bold;">${prod.cantidad} ${prod.unidad}</span>
-                <div class="grupo-botones" style="display:flex; gap:5px; margin-top:5px;">${botonesHtml}</div>
-            </div>
-        `;
-        listaProductos.appendChild(li);
-    });
-
-    // Contadores del panel superior
-    let totalBajoGlobal = productos.filter(p => p.cantidad <= p.stockMinimo).length;
-    totalProductosTxt.textContent = productos.length;
-    stockBajoTxt.textContent = totalBajoGlobal;
-}
+    if (infoPagina) infoPagina.textContent = `Página ${paginaActual} de ${totalPaginas}`;
+    if (btnAnterior) btnAnterior.disabled = (paginaActual === 1);
+    if (btnAnterior) btnAnterior.style.opacity = (paginaActual === 1) ? "0.5" : "1";
+    

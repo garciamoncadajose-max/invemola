@@ -9,38 +9,29 @@
 </head>
 <body>
 
-    <!-- PANTALLA DE INICIO DE SESIÓN CON EL NUEVO NOMBRE -->
+    <!-- REPARADO: Una sola pantalla de login ágil y directa por PIN personal -->
     <section id="pantalla-login" style="max-width: 400px; margin: 5rem auto; padding: 2rem; text-align: center; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        <!-- CONTENEDOR DEL LOGO EN EL LOGIN -->
         <div class="logo-contenedor">
+            <!-- Apunta a la carpeta de tu imagen de logo real del restaurante -->
             <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-app">
         </div>
         <h2>Inventario Molarepa</h2>
-        <p>Selecciona tu puesto e introduce tu PIN de seguridad</p>
+        <p>Introduce tu PIN personal de seguridad</p>
         
-        <label for="select-rol" style="display:block; font-weight:bold; margin-top:1rem; text-align:left;">Puesto:</label>
-        <select id="select-rol" style="width:100%; padding:0.7rem; margin-bottom:1rem; border:1px solid #dddddd; border-radius:4px;">
-            <option value="cocinero">👨‍🍳 Cocinero / Salida de Stock</option>
-            <option value="almacenista">📦 Almacenista / Entrada de Mercancía</option>
-            <option value="encargada">👑 Encargada / Control General</option>
-        </select>
-
-        <label for="pin-acceso" style="display:block; font-weight:bold; text-align:left;">PIN de 4 dígitos:</label>
         <input type="password" id="pin-acceso" maxlength="4" placeholder="••••" style="width:100%; padding:0.7rem; text-align:center; font-size:1.5rem; letter-spacing:5px; border:1px solid #dddddd; border-radius:4px; margin-bottom:1.5rem;">
 
         <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
     </section>
 
-    <!-- UNIFICADO: Contenedor principal de la aplicación -->
+    <!-- Contenedor principal de la aplicación -->
     <div id="app-principal" style="display: none;">
         
-        <!-- ENCABEZADO PRINCIPAL DE LA APP ACTUALIZADO -->
+        <!-- ENCABEZADO PRINCIPAL DE LA APP -->
         <header class="encabezado">
             <button id="btn-cerrar-sesion" style="float: right; background: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Salir</button>
             
-            <!-- LOGO INTEGRADO EN EL ENCABEZADO -->
             <div class="logo-header-contenedor">
-                <img src="logo.png" alt="Logo Molarepa" class="logo-header">
+                <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-header">
             </div>
             <h1>Inventario Molarepa</h1>
             <p>Control de stock para hostelería</p>
@@ -106,7 +97,6 @@
                 </form>
             </section>
 
-            <!-- UNIFICADO: Módulo de lista de productos registrados -->
             <section class="lista-productos">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
                     <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
@@ -128,9 +118,9 @@
                 </div>
             </section>
         </main>
-    </div> <!-- Cierre correcto de app-principal -->
+    </div>
 
-    <!-- SCRIPTS DE CONEXIÓN LOCAL Y DE INTERNET -->
+    <!-- REINCORPORADOS: Todos los conectores esenciales de base de datos e internet -->
     <script src="xlsx.full.min.js.txt"></script>
     <script src="https://jsdelivr.net"></script>
     <script src="app.js"></script>

@@ -65,10 +65,10 @@ if (formulario) {
         if (!supabase) return;
         const nuevoProd = {
             nombre: document.getElementById('nombre').value,
-            cantidad: parseFloat(document.getElementById('cantidad').value),
+            cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
             unidad: document.getElementById('unidad').value,
             categoria: document.getElementById('categoria').value,
-            stockMinimo: parseFloat(document.getElementById('stock-minimo').value),
+            stockMinimo: parseFloat(document.getElementById('stock-minimo').value) || 0,
             caducidad: document.getElementById('caducidad').value,
             usuario: usuarioActivo ? usuarioActivo.nombre : "Desconocido"
         };
@@ -83,7 +83,8 @@ async function sumarStock(id, txt = "añadir") {
     if (p) {
         const cant = parseFloat(prompt(`¿Cuánto vas a ${txt} de ${p.nombre}?`));
         if (!isNaN(cant) && cant > 0) {
-            await supabase.from('productos').update({ cantidad: parseFloat((p.cantidad + cant).toFixed(2)) }).eq('id', id);
+            const actual = parseFloat(p.cantidad) || 0;
+            await supabase.from('productos').update({ cantidad: parseFloat((actual + cant).toFixed(2)) }).eq('id', id);
             consultarDatosDeInternet();
         }
     }
@@ -94,10 +95,11 @@ async function restarStock(id, txt = "sacar") {
     const p = productos.find(x => x.id === id);
     if (p) {
         const cant = parseFloat(prompt(`¿Cuánto vas a ${txt} de ${p.nombre}?`));
-        if (!isNaN(cant) && cant > 0 && p.cantidad >= cant) {
-            await supabase.from('productos').update({ cantidad: parseFloat((p.cantidad - cant).toFixed(2)) }).eq('id', id);
+        const actual = parseFloat(p.cantidad) || 0;
+        if (!isNaN(cant) && cant > 0 && actual >= cant) {
+            await supabase.from('productos').update({ cantidad: parseFloat((actual - cant).toFixed(2)) }).eq('id', id);
             consultarDatosDeInternet();
-        } else if (p.cantidad < cant) { alert("Error: Cantidad insuficiente."); }
+        } else if (actual < cant) { alert("Error: Cantidad insuficiente."); }
     }
 }
 
@@ -117,6 +119,7 @@ if (btnExportar) btnExportar.addEventListener('click', () => {
 });
 
 function configurarPermisosPorRol() {
+    if (!usuarioActivo) return;
     const sF = document.querySelector('.formulario'), sR = document.querySelector('.resumen');
     if (usuarioActivo.rol === 'encargada') {
         if (sF) sF.style.display = 'block'; if (sR) sR.style.display = 'block'; if (btnExportar) btnExportar.style.display = 'block';
@@ -144,7 +147,7 @@ function actualizarInterfaz() {
     }
 
     const term = buscador ? buscador.value.toLowerCase() : "";
-    const fil = productos.filter(x => x.nombre.toLowerCase().includes(term));
+    const fil = productos.filter(x => x.nombre && x.nombre.toLowerCase().includes(term));
     const totPag = Math.ceil(fil.length / productosPorPagina) || 1;
     if (paginaActual > totPag) paginaActual = totPag;
 
@@ -163,7 +166,10 @@ function actualizarInterfaz() {
 
     vis.forEach(p => {
         const li = document.createElement('li'); li.className = `producto-item cat-${p.categoria || 'otros'}`;
-        const esB = p.cantidad <= p.stockMinimo;
+        const cantProd = parseFloat(p.cantidad) || 0;
+        const minProd = parseFloat(p.stockMinimo) || 0;
+        const esB = cantProd <= minProd;
+        
         let esC = false, infoC = 'No registra';
         if (p.caducidad) {
             const dD = Math.ceil((new Date(p.caducidad) - hoy) / (1000 * 60 * 60 * 24));
@@ -178,4 +184,3 @@ function actualizarInterfaz() {
         } else if (uRol === 'almacenista') {
             btnH = `<button onclick="sumarStock(${p.id}, 'recibir como Entrada')" style="background:#2ecc71; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold; margin-right:5px;">📥 Recibir</button>
                     <button onclick="restarStock(${p.id}, 'descontar del Almacén')" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold;">📤 Sacar</button>`;
-        } else if (uRol === 'cocinero') {

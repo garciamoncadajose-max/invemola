@@ -182,3 +182,37 @@ ul { list-style: none; padding: 0; margin: 0; }
     .producto-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .producto-acciones { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
 }
+/* ==========================================================================
+   ESTILOS PARA EL LOGO DE INVENTARIO MOLAREPA
+   ========================================================================== */
+
+/* Logo en la pantalla de Login */
+.logo-contenedor {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.logo-app {
+    width: 120px;          /* Tamaño ideal para la pantalla de acceso */
+    height: 120px;
+    object-fit: cover;     /* Mantiene la proporción de la imagen */
+    border-radius: 50%;    /* Hace el logo redondo (opcional, quítalo si es cuadrado) */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Logo dentro del encabezado principal */
+.logo-header-contenedor {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.logo-header {
+    width: 70px;           /* Más compacto para que no ocupe demasiado espacio arriba */
+    height: 70px;
+    object-fit: cover;
+    border-radius: 50%;
+    background-color: #ffffff; /* Le da un fondo blanco por si el header es oscuro */
+    padding: 3px;
+}

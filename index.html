@@ -3,122 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Inteligente</title>
+    <title>Inventario Molarepa</title>
     <!-- Tu archivo de estilos CSS -->
     <link rel="stylesheet" href="css/style.css">
-  
 </head>
 <body>
 
-    <header class="encabezado">
-        <h1>Inventario Inteligente</h1>
-        <p>Control de stock para hostelería</p>
-    </header>
+    <!-- PANTALLA DE INICIO DE SESIÓN CON EL NUEVO NOMBRE -->
+    <section id="pantalla-login" style="max-width: 400px; margin: 5rem auto; padding: 2rem; text-align: center; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <!-- CONTENEDOR DEL LOGO EN EL LOGIN -->
+        <div class="logo-contenedor">
+            <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-app">
+        </div>
+        <h2>Inventario Molarepa</h2>
+        <p>Selecciona tu puesto e introduce tu PIN de seguridad</p>
+        
+        <label for="select-rol" style="display:block; font-weight:bold; margin-top:1rem; text-align:left;">Puesto:</label>
+        <select id="select-rol" style="width:100%; padding:0.7rem; margin-bottom:1rem; border:1px solid #dddddd; border-radius:4px;">
+            <option value="cocinero">👨‍🍳 Cocinero / Salida de Stock</option>
+            <option value="almacenista">📦 Almacenista / Entrada de Mercancía</option>
+            <option value="encargada">👑 Encargada / Control General</option>
+        </select>
 
-    <main class="contenedor">
-        <section class="resumen">
-            <h2>Resumen del inventario</h2>
+        <label for="pin-acceso" style="display:block; font-weight:bold; text-align:left;">PIN de 4 dígitos:</label>
+        <input type="password" id="pin-acceso" maxlength="4" placeholder="••••" style="width:100%; padding:0.7rem; text-align:center; font-size:1.5rem; letter-spacing:5px; border:1px solid #dddddd; border-radius:4px; margin-bottom:1.5rem;">
 
-            <div class="tarjetas">
-                <article class="tarjeta">
-                    <h3>Productos</h3>
-                    <p id="total-productos">0</p>
-                </article>
+        <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
+    </section>
 
-                <article class="tarjeta">
-                    <h3>Stock bajo</h3>
-                    <p id="stock-bajo">0</p>
-                </article>
-
-                <article class="tarjeta">
-                    <h3>Por caducar</h3>
-                    <p id="por-caducar">0</p>
-                </article>
+    <!-- UNIFICADO: Contenedor principal de la aplicación -->
+    <div id="app-principal" style="display: none;">
+        
+        <!-- ENCABEZADO PRINCIPAL DE LA APP ACTUALIZADO -->
+        <header class="encabezado">
+            <button id="btn-cerrar-sesion" style="float: right; background: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Salir</button>
+            
+            <!-- LOGO INTEGRADO EN EL ENCABEZADO -->
+            <div class="logo-header-contenedor">
+                <img src="logo.png" alt="Logo Molarepa" class="logo-header">
             </div>
-        </section>
+            <h1>Inventario Molarepa</h1>
+            <p>Control de stock para hostelería</p>
+        </header>
 
-        <section class="formulario">
-            <h2>Registrar producto</h2>
+        <main class="contenedor">
+            <section class="resumen">
+                <h2>Resumen del inventario</h2>
 
-                      <form id="formulario-producto">
-                <label for="nombre">Nombre del Producto</label>
-                <input type="text" id="nombre" placeholder="Ej. Pechuga de pollo" required>
+                <div class="tarjetas">
+                    <article class="tarjeta">
+                        <h3>Productos</h3>
+                        <p id="total-productos">0</p>
+                    </article>
 
-                <label for="cantidad">Cantidad inicial</label>
-                <input type="number" id="cantidad" min="0.01" step="any" required>
+                    <article class="tarjeta">
+                        <h3>Stock bajo</h3>
+                        <p id="stock-bajo">0</p>
+                    </article>
 
-                <label for="unidad">Unidad de medida</label>
-                <select id="unidad" required>
-                    <option value="kg">Kilogramos (kg)</option>
-                    <option value="g">Gramos (g)</option>
-                    <option value="l">Litros (l)</option>
-                    <option value="ud">Unidades (ud)</option>
-                    <option value="bolsas">Bolsas (bl)</option>
-                </select>
+                    <article class="tarjeta">
+                        <h3>Por caducar</h3>
+                        <p id="por-caducar">0</p>
+                    </article>
+                </div>
+            </section>
 
-                <!-- NUEVO: CAMPO DE CATEGORÍAS -->
-                <label for="categoria">Categoría</label>
-                <select id="categoria" required>
-                    <option value="carnes">🥩 Carnes y Aves</option>
-                    <option value="verduras">🥦 Verduras y Frutas</option>
-                    <option value="lacteos">🧀 Lácteos</option>
-                    <option value="bebidas">🥤 Bebidas</option>
-                    <option value="otros">📦 Otros / Almacén</option>
-                </select>
+            <section class="formulario">
+                <h2>Registrar producto</h2>
 
-                <label for="stock-minimo">Stock mínimo</label>
-                <input type="number" id="stock-minimo" min="0" step="any" value="1" required>
+                <form id="formulario-producto">
+                    <label for="nombre">Nombre del Producto</label>
+                    <input type="text" id="nombre" placeholder="Ej. Pechuga de pollo" required>
 
-                <label for="caducidad">Fecha de caducidad</label>
-                <input type="date" id="caducidad">
+                    <label for="cantidad">Cantidad inicial</label>
+                    <input type="number" id="cantidad" min="0.01" step="any" required>
 
-                <button type="submit">Añadir producto</button>
-            </form>
+                    <label for="unidad">Unidad de medida</label>
+                    <select id="unidad" required>
+                        <option value="kg">Kilogramos (kg)</option>
+                        <option value="g">Gramos (g)</option>
+                        <option value="l">Litros (l)</option>
+                        <option value="ud">Unidades (ud)</option>
+                        <option value="bolsas">Bolsas (bl)</option>
+                    </select>
 
-        </section>
+                    <label for="categoria">Categoría</label>
+                    <select id="categoria" required>
+                        <option value="carnes">🥩 Carnes y Aves</option>
+                        <option value="verduras">🥦 Verduras y Frutas</option>
+                        <option value="lacteos">🧀 Lácteos</option>
+                        <option value="bebidas">🥤 Bebidas</option>
+                        <option value="otros">📦 Otros / Almacén</option>
+                    </select>
 
-               <section class="lista-productos">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
-                <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
-            </div>
+                    <label for="stock-minimo">Stock mínimo</label>
+                    <input type="number" id="stock-minimo" min="0" step="any" value="1" required>
 
-            <!-- BARRA DE BÚSQUEDA AÑADIDA -->
-            <div style="margin-bottom: 1.5rem;">
-                <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
-            </div>
+                    <label for="caducidad">Fecha de caducidad</label>
+                    <input type="date" id="caducidad">
 
-            <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
-            <ul id="lista-productos"></ul>
-                    <section class="lista-productos">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
-                <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
-            </div>
+                    <button type="submit">Añadir producto</button>
+                </form>
+            </section>
 
-            <div style="margin-bottom: 1.5rem;">
-                <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
-            </div>
+            <!-- UNIFICADO: Módulo de lista de productos registrados -->
+            <section class="lista-productos">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
+                    <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
+                </div>
 
-            <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
-            <ul id="lista-productos"></ul>
+                <div style="margin-bottom: 1.5rem;">
+                    <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
+                </div>
 
-            <!-- NUEVO: BOTONES DE PAGINACIÓN -->
-            <div id="controles-paginacion" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
-                <button id="btn-anterior" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">⬅️ Ant.</button>
-                <span id="info-pagina" style="font-weight: bold; color: #2c3e50;">Página 1 de 1</span>
-                <button id="btn-siguiente" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">Sig. ➡️</button>
-            </div>
-        </section>
+                <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
+                <ul id="lista-productos"></ul>
 
-        </section>
+                <!-- BOTONES DE PAGINACIÓN -->
+                <div id="controles-paginacion" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                    <button id="btn-anterior" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">⬅️ Ant.</button>
+                    <span id="info-pagina" style="font-weight: bold; color: #2c3e50;">Página 1 de 1</span>
+                    <button id="btn-siguiente" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">Sig. ➡️</button>
+                </div>
+            </section>
+        </main>
+    </div> <!-- Cierre correcto de app-principal -->
 
-    </main>
-
-    <!-- CORREGIDO: Adaptado a la extensión del archivo real de tu PC -->
+    <!-- SCRIPTS DE CONEXIÓN LOCAL Y DE INTERNET -->
     <script src="xlsx.full.min.js.txt"></script>
-    
-    <!-- Tu archivo de lógica de la aplicación -->
+    <script src="https://jsdelivr.net"></script>
     <script src="app.js"></script>
 </body>
 </html>

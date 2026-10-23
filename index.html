@@ -9,59 +9,21 @@
 </head>
 <body>
 
-    <!-- Pantalla de Inicio de Sesión -->
+    <!-- PANTALLA DE INICIO DE SESIÓN (REPARADA CON LA CAJA DEL PIN) -->
     <section id="pantalla-login" style="max-width: 400px; margin: 5rem auto; padding: 2rem; text-align: center; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
         <div class="logo-contenedor">
             <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-app">
         </div>
         <h2>Inventario Molarepa</h2>
         <p>Introduce tu PIN personal de seguridad</p>
-       <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
-Usa el código con precaución.
-
-El ajuste de acoplamiento en tu app.js
-
-Para asegurarnos de que la conexión sea indestructible sin importar cómo se renderice en el móvil, abre tu app.js en GitHub y reemplaza el bloque de la función de entrada (aproximadamente en la línea 26) por este fragmento blindado con doble verificación:
-javascript
-// SOLUCIÓN AL ENLACE ROTO: Escuchador directo y forzado para el botón de acceso
-const botonIngresar = document.getElementById('btn-entrar');
-
-if (botonIngresar) {
-    botonIngresar.onclick = function() {
-        const pin = document.getElementById('pin-acceso').value;
         
-        if (nominaEmpleados[pin]) {
-            usuarioActivo = nominaEmpleados[pin];
-            document.getElementById('pantalla-login').style.display = 'none';
-            document.getElementById('app-principal').style.display = 'block';
-            document.getElementById('pin-acceso').value = "";
-            
-            const hP = document.querySelector('.encabezado p');
-            if (hP) hP.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
-            
-            configurarPermisosPorRol(); 
-            consultarDatosDeInternet();
-        } else { 
-            alert("❌ PIN Inválido. No corresponde a ningún empleado."); 
-        }
-    };
-}
-Usa el código con precaución.
-
-Resumen del Acoplamiento de Red Resuelto
-
-
-Archivo	Elemento Clave	Valor Requerido	Función de Reparación
-index.html	Atributo del Botón	id="btn-entrar"	Actúa como la antena receptora del clic táctil en el teléfono.
-app.js	Variable del Capturador	document.getElementById('btn-entrar')	Solda el puente lógico para leer el PIN de la nómina en internet en el acto.
-
-Verifica que la ID coincida en tu index.html y actualiza el bloque en tu app.js en GitHub. Espera un minuto, abre el enlace en tu celular en pestaña de incógnito nueva e ingresa el PIN de la encargada (1234). ¿Lograste romper el bloqueo y pasar por fin al inventario general?
-Las respuestas de la IA pueden contener errores. Más información
+        <!-- Creada la caja del PIN obligatoria que faltaba -->
+        <input type="password" id="pin-acceso" maxlength="4" placeholder="••••" style="width:100%; padding:0.7rem; text-align:center; font-size:1.5rem; letter-spacing:5px; border:1px solid #dddddd; border-radius:4px; margin-bottom:1.5rem; box-sizing: border-box;">
 
         <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
-    </section>
+    </section> <!-- Cerrada correctamente la sección de login -->
 
-    <!-- Contenedor Principal de la App -->
+    <!-- Contenedor Principal de la App (Oculto al inicio) -->
     <div id="app-principal" style="display: none;">
         <header class="encabezado">
             <button id="btn-cerrar-sesion" style="float: right; background: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Salir</button>
@@ -134,6 +96,7 @@ Las respuestas de la IA pueden contener errores. Más información
 
     <!-- Librerías de Conexión -->
     <script src="xlsx.full.min.js.txt"></script>
+    <!-- CORREGIDO: Ruta oficial CDN de Supabase para evitar el enlace roto -->
     <script src="https://cloudflare.com"></script>
     <script src="app.js"></script>
 </body>

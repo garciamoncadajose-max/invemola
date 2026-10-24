@@ -3,101 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Molarepa</title>
-    <!-- Tu archivo de estilos CSS -->
+    <title>Inventario Restaurante</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Librería externa para exportar a Excel -->
+    <script src="https://jsdelivr.net"></script>
 </head>
+
 <body>
 
-    <!-- PANTALLA DE INICIO DE SESIÓN (REPARADA CON LA CAJA DEL PIN) -->
-    <section id="pantalla-login" style="max-width: 400px; margin: 5rem auto; padding: 2rem; text-align: center; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        <div class="logo-contenedor">
-            <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-app">
+    <!-- PANTALLA DE ACCESO POR PIN -->
+    <div id="pantalla-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e272e; display: flex; justify-content: center; align-items: center; z-index: 9999;">
+        <div style="background: white; padding: 2.5rem; border-radius: 8px; text-align: center; max-width: 350px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <h2 style="margin: 0 0 0.5rem 0; color: #2c3e50;">Acceso Seguro</h2>
+            <p style="color: #57606f; font-size: 0.9rem; margin-bottom: 1.5rem;">Ingresa tu PIN de 4 dígitos</p>
+            <input type="password" id="pin-entrada" maxlength="4" placeholder="••••" style="font-size: 2rem; text-align: center; letter-spacing: 0.5rem; padding: 0.5rem; width: 100%; border: 2px solid #c8d6e5; border-radius: 4px; box-sizing: border-box;">
+            <p id="error-login" style="color: #ff4757; font-weight: bold; font-size: 0.9rem; margin: 0.5rem 0 0 0; display: none;">⚠️ PIN no válido</p>
+            <button id="btn-login" style="width: 100%; background: #e67e22; color: white; border: none; padding: 0.8rem; margin-top: 1.5rem; border-radius: 4px; font-size: 1rem; cursor: pointer; font-weight: bold;">Ingresar</button>
         </div>
-        <h2>Inventario Molarepa</h2>
-        <p>Introduce tu PIN personal de seguridad</p>
-        
-        <!-- Creada la caja del PIN obligatoria que faltaba -->
-        <input type="password" id="pin-acceso" maxlength="4" placeholder="••••" style="width:100%; padding:0.7rem; text-align:center; font-size:1.5rem; letter-spacing:5px; border:1px solid #dddddd; border-radius:4px; margin-bottom:1.5rem; box-sizing: border-box;">
+    </div>
 
-        <button id="btn-entrar" style="width:100%; background:#2c3e50; color:white; border:none; padding:0.8rem; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">Ingresar al Sistema</button>
-    </section> <!-- Cerrada correctamente la sección de login -->
-
-    <!-- Contenedor Principal de la App (Oculto al inicio) -->
-    <div id="app-principal" style="display: none;">
-        <header class="encabezado">
-            <button id="btn-cerrar-sesion" style="float: right; background: #e74c3c; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold;">❌ Salir</button>
-            <div class="logo-header-contenedor">
-                <img src="imagen/image.jfif" alt="Logo Molarepa" class="logo-header">
+    <!-- CONTENIDO DE LA APLICACIÓN -->
+    <div id="contenido-app" style="display: none;">
+        <header class="encabezado" style="position: relative;">
+            <div style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: white;">
+                👤 <span id="nombre-usuario-activo">Cargando...</span> | <a href="#" id="btn-cerrar-sesion" style="color: #ff4757; text-decoration: none; font-weight: bold;">Salir</a>
             </div>
-            <h1>Inventario Molarepa</h1>
-            <p>Control de stock para hostelería</p>
+            <div class="logo-header-contenedor">
+                <img src="imagen/image.jfif" alt="Logo Restaurante" class="logo-header">
+            </div>
+            <h1>Control de Inventario</h1>
+            <p>Gestión interna del restaurante</p>
         </header>
 
         <main class="contenedor">
+            <!-- Bloque de Resumen -->
             <section class="resumen">
-                <h2>Resumen del inventario</h2>
+                <h2>Resumen del Inventario</h2>
                 <div class="tarjetas">
-                    <article class="tarjeta"><h3>Productos</h3><p id="total-productos">0</p></article>
-                    <article class="tarjeta"><h3>Stock bajo</h3><p id="stock-bajo">0</p></article>
-                    <article class="tarjeta"><h3>Por caducar</h3><p id="por-caducar">0</p></article>
+                    <article class="tarjeta">
+                        <h3>Total Productos</h3>
+                        <p id="total-productos">0</p>
+                    </article>
+                    <article class="tarjeta">
+                        <h3>Stock Bajo</h3>
+                        <p id="stock-bajo">0</p>
+                    </article>
+                    <article class="tarjeta">
+                        <h3>Por Caducar</h3>
+                        <p id="por-caducar">0</p>
+                    </article>
                 </div>
             </section>
 
-            <section class="formulario">
-                <h2>Registrar producto</h2>
+            <!-- Sección de Formulario de Registro (Abierto para todos) -->
+            <section id="seccion-registro-prod">
+                <h2>Añadir Producto al Catálogo</h2>
                 <form id="formulario-producto">
                     <label for="nombre">Nombre del Producto</label>
-                    <input type="text" id="nombre" placeholder="Ej. Pechuga de pollo" required>
-                    <label for="cantidad">Cantidad inicial</label>
-                    <input type="number" id="cantidad" min="0.01" step="any" required>
-                    <label for="unidad">Unidad de medida</label>
-                    <select id="unidad" required>
-                        <option value="kg">Kilogramos (kg)</option>
-                        <option value="g">Gramos (g)</option>
-                        <option value="l">Litros (l)</option>
-                        <option value="ud">Unidades (ud)</option>
-                        <option value="bolsas">Bolsas (bl)</option>
-                    </select>
+                    <input type="text" id="nombre" required placeholder="Ej. Pechuga de Pollo">
+
                     <label for="categoria">Categoría</label>
                     <select id="categoria" required>
-                        <option value="carnes">🥩 Carnes y Aves</option>
-                        <option value="verduras">🥦 Verduras y Frutas</option>
-                        <option value="lacteos">🧀 Lácteos</option>
-                        <option value="bebidas">🥤 Bebidas</option>
-                        <option value="otros">📦 Otros / Almacén</option>
+                        <option value="carnes">Carnes</option>
+                        <option value="verduras">Verduras</option>
+                        <option value="lacteos">Lácteos</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="otros" selected>Otros</option>
                     </select>
-                    <label for="stock-minimo">Stock mínimo</label>
-                    <input type="number" id="stock-minimo" min="0" step="any" value="1" required>
-                    <label for="caducidad">Fecha de caducidad</label>
+
+                    <label for="cantidad">Cantidad Inicial</label>
+                    <input type="number" id="cantidad" step="0.01" min="0" required placeholder="0.00">
+
+                    <label for="unidad">Unidad de Medida</label>
+                    <select id="unidad" required>
+                        <option value="Kg">Kilogramos (Kg)</option>
+                        <option value="Lts">Litros (Lts)</option>
+                        <option value="Unidades">Unidades</option>
+                    </select>
+
+                    <label for="stock-minimo">Stock Mínimo Alerta</label>
+                    <input type="number" id="stock-minimo" step="0.01" min="0" value="1" required>
+
+                    <label for="caducidad">Fecha de Vencimiento</label>
                     <input type="date" id="caducidad">
-                    <button type="submit">Añadir producto</button>
+
+                    <button type="submit">Guardar en Inventario</button>
                 </form>
             </section>
 
-            <section class="lista-productos">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f8f9fa; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-                    <h2 style="margin: 0; border: none; padding: 0;">Productos registrados</h2>
-                    <button id="btn-exportar" style="background: #27ae60; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">📊 Descargar Excel</button>
+            <!-- Lista de Control e Insumos -->
+            <section class="lista-seccion">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Stock Actual</h2>
+                    <button id="btn-exportar" style="width: auto; margin-top: 0; background-color: #27ae60;">📄 Exportar Excel</button>
                 </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre..." style="width: 100%; padding: 0.7rem; border: 1px solid #dddddd; border-radius: 4px; box-sizing: border-box; font-size: 1rem;">
-                </div>
-                <p id="mensaje-vacio">Todavía no hay productos registrados.</p>
+                
+                <input type="text" id="buscador" placeholder="🔍 Buscar producto por nombre...">
+                
+                <p id="mensaje-vacio" style="text-align: center; color: #57606f; padding: 2rem 0;">No hay artículos registrados en el inventario.</p>
+                
                 <ul id="lista-productos"></ul>
-                <div id="controles-paginacion" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
-                    <button id="btn-anterior" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">⬅️ Ant.</button>
-                    <span id="info-pagina" style="font-weight: bold; color: #2c3e50;">Página 1 de 1</span>
-                    <button id="btn-siguiente" style="background: #2c3e50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">Sig. ➡️</button>
-                </div>
             </section>
         </main>
     </div>
 
-    <!-- Librerías de Conexión -->
-    <script src="xlsx.full.min.js.txt"></script>
-    <!-- CORREGIDO: Ruta oficial CDN de Supabase para evitar el enlace roto -->
-    <script src="https://cloudflare.com"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

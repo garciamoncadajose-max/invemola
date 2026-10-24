@@ -1,4 +1,30 @@
-// 1. Base de Datos de Usuarios y PINs Permitidos
+// 1. Importar Firebase y Cloud Firestore desde los servidores de Google
+import { initializeApp } from "https://gstatic.com";
+import { 
+    getFirestore, 
+    collection, 
+    onSnapshot, 
+    doc, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc 
+} from "https://gstatic.com";
+
+// 2. Tus Claves Oficiales de Conexión (El "1" rojo inicial es normal del editor)
+const firebaseConfig = {
+    apiKey: "AIzaSyAF8GKINazkaqN69EFCsLxv_0xG3EbUGAk",
+    authDomain: "://firebaseapp.com",
+    projectId: "invenatrio-molarepa-prueba",
+    storageBucket: "invenatrio-molarepa-prueba.firebasestorage.app",
+    messagingSenderId: "2314307099",
+    appId: "1:2314307099:web:a655411fa87d1da1cc1abe"
+};
+
+// Inicializar Firebase y la Base de Datos
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 3. Base de Datos de Usuarios y PINs Permitidos
 const USUARIOS = {
     "1111": "Gaby",
     "2222": "Juaco",
@@ -11,39 +37,53 @@ const USUARIOS = {
 let usuarioActivo = "";
 let productos = [];
 
-try {
-    productos = JSON.parse(localStorage.getItem('inventario_restaurante')) || [];
-} catch (e) {
-    console.error("Error cargando inventario", e);
+// 4. ESCUCHA EN TIEMPO REAL (Sincronización Automática entre Dispositivos)
+onSnapshot(collection(db, "inventario"), (snapshot) => {
     productos = [];
-}
+    snapshot.forEach((documento) => {
+        productos.push({
+            id: documento.id, // ID único automático de Firebase
+            ...documento.data()
+        });
+    });
+    actualizarInterfaz();
+});
 
-// 2. Funciones de Control de Mercancía Libres de Contexto Interno
-window.sumarStock = function(id) {
+// 5. Funciones de Control de Mercancía en la Nube (Vinculadas a Window para los botones HTML)
+window.sumarStock = async function(id) {
     const prod = productos.find(function(p) { return p.id === id; });
     if (prod) {
         const val = parseFloat(prompt(`¿Cuánta mercancía vas a INGRESAR de ${prod.nombre}?`));
         if (!isNaN(val) && val > 0) {
-            prod.cantidad = parseFloat((prod.cantidad + val).toFixed(2));
-            const nuevaFecha = prompt(`¿Deseas actualizar la fecha de vencimiento? (AAAA-MM-DD)`, prod.caducidad);
-            if (nuevaFecha !== null) prod.caducidad = nuevaFecha;
+            const nuevaCantidad = parseFloat((prod.cantidad + val).toFixed(2));
+            const nuevaFecha = prompt(`¿Deseas actualizar la fecha de vencimiento? (AAAA-MM-DD)`, prod.caducidad || "");
             
-            localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
-            if (window.actualizarPantalla) window.actualizarPantalla();
+            try {
+                const docRef = doc(db, "inventario", id);
+                await updateDoc(docRef, {
+                    cantidad: nuevaCantidad,
+                    caducidad: nuevaFecha !== null ? nuevaFecha : (prod.caducidad || "")
+                });
+            } catch (error) {
+                console.error("Error al sumar stock en Firebase:", error);
+            }
         }
     }
 };
 
-window.restarStock = function(id) {
+window.restarStock = async function(id) {
     const prod = productos.find(function(p) { return p.id === id; });
     if (prod) {
         const val = parseFloat(prompt(`¿Cuánto vas a RETIRAR/SACAR de ${prod.nombre}?`));
         if (!isNaN(val) && val > 0) {
             if (prod.cantidad >= val) {
-                prod.cantidad = parseFloat((prod.cantidad - val).toFixed(2));
-                
-                localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
-                if (window.actualizarPantalla) window.actualizarPantalla();
+                const nuevaCantidad = parseFloat((prod.cantidad - val).toFixed(2));
+                try {
+                    const docRef = doc(db, "inventario", id);
+                    await updateDoc(docRef, { cantidad: nuevaCantidad });
+                } catch (error) {
+                    console.error("Error al restar stock en Firebase:", error);
+                }
             } else {
                 alert(`¡Error! Existencias insuficientes.`);
             }
@@ -51,15 +91,17 @@ window.restarStock = function(id) {
     }
 };
 
-window.eliminarProducto = function(id) {
+window.eliminarProducto = async function(id) {
     if (confirm("¿Borrar permanentemente este ítem del inventario?")) {
-        productos = productos.filter(function(p) { return p.id !== id; });
-        localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
-        if (window.actualizarPantalla) window.actualizarPantalla();
+        try {
+            await deleteDoc(doc(db, "inventario", id));
+        } catch (error) {
+            console.error("Error al eliminar producto en Firebase:", error);
+        }
     }
 };
 
-// 3. Orquestador de Eventos de la Interfaz
+// 6. Orquestador de Eventos de la Interfaz
 document.addEventListener('DOMContentLoaded', function() {
     const pantallaLogin = document.getElementById('pantalla-login');
     const contenidoApp = document.getElementById('contenido-app');
@@ -111,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (formulario) {
-        formulario.addEventListener('submit', function(e) {
+        formulario.addEventListener('submit', async function(e) {
             e.preventDefault();
             const nombre = document.getElementById('nombre').value;
             const cantidad = parseFloat(document.getElementById('cantidad').value);
@@ -120,11 +162,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const stockMinimo = parseFloat(document.getElementById('stock-minimo').value);
             const caducidad = document.getElementById('caducidad').value;
 
-            productos.push({ id: Date.now(), nombre: nombre, cantidad: cantidad, unidad: unidad, categoria: categoria, stockMinimo: stockMinimo, caducidad: caducidad });
-            localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
-            formulario.reset();
-            document.getElementById('stock-minimo').value = "1";
-            actualizarInterfaz();
+            try {
+                // Guarda el producto directamente en la colección de Firebase en la nube
+                await addDoc(collection(db, "inventario"), {
+                    nombre: nombre,
+                    cantidad: cantidad,
+                    unidad: unidad,
+                    categoria: categoria,
+                    stockMinimo: stockMinimo,
+                    caducidad: caducidad
+                });
+                
+                formulario.reset();
+                document.getElementById('stock-minimo').value = "1";
+            } catch (error) {
+                console.error("Error al añadir producto a Firebase:", error);
+            }
         });
     }
 
@@ -139,69 +192,56 @@ document.addEventListener('DOMContentLoaded', function() {
             XLSX.writeFile(libro, "Reporte.xlsx");
         });
     }
-
-    window.actualizarPantalla = actualizarInterfaz;
-
-    function actualizarInterfaz() {
-        if (!listaProductos) return;
-        listaProductos.innerHTML = '';
-
-        // Contadores para el resumen del inventario
-        let totalBajo = 0;
-        let totalCaduca = 0;
-
-        if (productos.length === 0) {
-            if (mensajeVacio) mensajeVacio.style.display = 'block';
-            if (totalProductosTxt) totalProductosTxt.textContent = "0";
-            if (stockBajoTxt) stockBajoTxt.textContent = "0";
-            if (porCaducarTxt) porCaducarTxt.textContent = "0";
-            return;
-        }
-        if (mensajeVacio) mensajeVacio.style.display = 'none';
-
-        const busq = buscador ? buscador.value.toLowerCase() : "";
-        const filtrados = productos.filter(function(p) { return p.nombre.toLowerCase().includes(busq); });
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-
-        filtrados.forEach(function(prod) {
-            const li = document.createElement('li');
-            li.className = `producto-item cat-${prod.categoria || 'otros'}`;
-            const bajo = prod.cantidad <= prod.stockMinimo;
-            if (bajo) totalBajo++;
-            
-            let esCriticoCaducidad = false;
-            if (prod.caducidad) {
-                const fechaCad = new Date(prod.caducidad + 'T00:00:00');
-                const dias = Math.ceil((fechaCad - hoy) / (1000 * 60 * 60 * 24));
-                if (dias <= 3 && dias >= 0) {
-                    esCriticoCaducidad = true;
-                    totalCaduca++;
-                }
-            }
-
-            li.innerHTML = `
-                <div class="producto-info">
-                    <h4>${prod.nombre}</h4>
-                    <p style="font-size:0.8rem; color:#888; text-transform:uppercase; margin:0;">🏷️ ${prod.categoria || 'otros'}</p>
-                    <p style="margin-top:2px; font-size:0.85rem;">Mínimo: ${prod.stockMinimo} | Vence: ${prod.caducidad || 'No registra'}</p>
-                </div>
-                <div class="producto-acciones" style="display:flex; flex-direction:column; align-items:flex-end;">
-                    <span class="${bajo ? 'alerta-stock' : ''}" style="font-weight:bold; font-size:1.2rem;">${prod.cantidad} ${prod.unidad}</span>
-                    ${esCriticoCaducidad ? '<small class="alerta-caduca" style="color:red; font-weight:bold;">⚠️ ¡Por Caducar!</small>' : ''}
-                    <div style="margin-top: 5px;">
-                        <button onclick="sumarStock(${prod.id})" style="padding: 2px 8px; cursor: pointer;">+</button>
-                        <button onclick="restarStock(${prod.id})" style="padding: 2px 8px; cursor: pointer;">-</button>
-                        <button onclick="eliminarProducto(${prod.id})" style="padding: 2px 8px; cursor: pointer; background-color: #ff4d4d; color: white; border: none; border-radius: 3px;">🗑️</button>
-                    </div>
-                </div>
-            `;
-            listaProductos.appendChild(li);
-        });
-
-        // Actualizar tarjetas de resumen con los valores reales calculados
-        if (totalProductosTxt) totalProductosTxt.textContent = productos.length;
-        if (stockBajoTxt) stockBajoTxt.textContent = totalBajo;
-        if (porCaducarTxt) porCaducarTxt.textContent = totalCaduca;
-    }
 });
+
+// 7. Renderizar los datos en la pantalla
+function actualizarInterfaz() {
+    const listaProductos = document.getElementById('lista-productos');
+    const mensajeVacio = document.getElementById('mensaje-vacio');
+    const totalProductosTxt = document.getElementById('total-productos');
+    const stockBajoTxt = document.getElementById('stock-bajo');
+    const porCaducarTxt = document.getElementById('por-caducar');
+    const buscador = document.getElementById('buscador');
+
+    if (!listaProductos) return;
+    listaProductos.innerHTML = '';
+
+    let totalBajo = 0;
+    let totalCaduca = 0;
+
+    if (productos.length === 0) {
+        if (mensajeVacio) mensajeVacio.style.display = 'block';
+        if (totalProductosTxt) totalProductosTxt.textContent = "0";
+        if (stockBajoTxt) stockBajoTxt.textContent = "0";
+        if (porCaducarTxt) porCaducarTxt.textContent = "0";
+        return;
+    }
+    if (mensajeVacio) mensajeVacio.style.display = 'none';
+
+    const busq = buscador ? buscador.value.toLowerCase() : "";
+    const filtrados = productos.filter(function(p) { return p.nombre.toLowerCase().includes(busq); });
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+
+    filtrados.forEach(function(prod) {
+        const li = document.createElement('li');
+        li.className = `producto-item cat-${prod.categoria || 'otros'}`;
+        const bajo = prod.cantidad <= prod.stockMinimo;
+        if (bajo) totalBajo++;
+        
+        let esCriticoCaducidad = false;
+        if (prod.caducidad) {
+            const fechaCad = new Date(prod.caducidad + 'T00:00:00');
+            const dias = Math.ceil((fechaCad - hoy) / (1000 * 60 * 60 * 24));
+            if (dias <= 3 && dias >= 0) {
+                esCriticoCaducidad = true;
+                totalCaduca++;
+            }
+        }
+
+        li.innerHTML = `
+            <div class="producto-info">
+                <h4>${prod.nombre}</h4>
+                <p style="font-size:0.8rem; color:#888; text-transform:uppercase; margin:0;">🏷️ ${prod.categoria || 'otros'}</p>
+                <p style="margin-top:2px; font-size:0.85rem;">Mínimo: ${prod.stockMinimo} | Vence: ${prod.caducidad || 'No registra'}</p>
+            </div>

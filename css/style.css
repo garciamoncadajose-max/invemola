@@ -68,4 +68,17 @@ ul { list-style: none; padding: 0; margin: 0; }
     padding: 3px; 
     box-sizing: border-box;
 }
+/* Fuerza a que el inventario no se muestre al cargar la página */
+#contenido-app {
+    display: none !important;
+}
+
+/* Asegura que la pantalla de bloqueo esté bien centrada */
+#pantalla-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
 

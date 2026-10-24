@@ -1,149 +1,207 @@
-/* global createClient */
-const SUPABASE_URL = "https://pejeyknmlfimglapyvxw.supabase.co"; 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlamV5a25tbGZpbWdsYXB5dnh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDU4NDAsImV4cCI6MjEwODMyMTg0MH0.DM-n-O5RMuelAFZyxQJsuB9LQSZHDyNkhKSqydZNujw";
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let productos = [], usuarioActivo = null, paginaActual = 1; const pPorPag = 5;
-
-const nominaEmpleados = {
-    "1234": { nombre: "María (Encargada)", rol: "encargada" },
-    "8881": { nombre: "Carlos (Almacenista)", rol: "almacenista" },
-    "2001": { nombre: "Juan (Cocinero 1)", rol: "cocinero" },
-    "2002": { nombre: "Pedro (Cocinero 2)", rol: "cocinero" },
-    "2003": { nombre: "Luis (Cocinero 3)", rol: "cocinero" },
-    "2004": { nombre: "Andrés (Cocinero 4)", rol: "cocinero" },
-    "2005": { nombre: "José (Cocinero 5)", rol: "cocinero" }
+// 1. Base de Datos de Usuarios y PINs Permitidos
+const USUARIOS = {
+    "1111": "Gaby",
+    "2222": "Juaco",
+    "3333": "Yenni",
+    "4444": "Cheo",
+    "5555": "Jhon",
+    "6666": "Desire"
 };
 
-const fProd = document.getElementById('formulario-producto');
-const lProd = document.getElementById('lista-productos');
-const buscador = document.getElementById('buscador');
-const totalProductosTxt = document.getElementById('total-productos');
-const stockBajoTxt = document.getElementById('stock-bajo');
-const porCaducarTxt = document.getElementById('por-caducar');
+let usuarioActivo = "";
+let productos = [];
 
-async function consultarDatosDeInternet() {
-    if (!supabase) return;
-    const { data, error } = await supabase.from('productos').select('*');
-    if (!error && data) { productos = data; actualizarInterfaz(); }
+try {
+    productos = JSON.parse(localStorage.getItem('inventario_restaurante')) || [];
+} catch (e) {
+    console.error("Error cargando inventario", e);
+    productos = [];
 }
 
-const botonIngresar = document.getElementById('btn-entrar');
-if (botonIngresar) {
-    botonIngresar.onclick = function() {
-        const pin = document.getElementById('pin-acceso').value;
-        if (nominaEmpleados[pin]) {
-            usuarioActivo = nominaEmpleados[pin];
-            document.getElementById('pantalla-login').style.display = 'none';
-            document.getElementById('app-principal').style.display = 'block';
-            document.getElementById('pin-acceso').value = "";
-            const hP = document.querySelector('.encabezado p');
-            if (hP) hP.textContent = `Operario: ${usuarioActivo.nombre} | Rol: ${usuarioActivo.rol.toUpperCase()}`;
-            configurarPermisosPorRol(); consultarDatosDeInternet();
-        } else { alert("❌ PIN Inválido."); }
-    };
-}
-
-if (document.getElementById('btn-cerrar-sesion')) {
-    document.getElementById('btn-cerrar-sesion').addEventListener('click', function() {
-        usuarioActivo = null; document.getElementById('app-principal').style.display = 'none'; document.getElementById('pantalla-login').style.display = 'block';
-    });
-}
-
-if (lProd) {
-    lProd.addEventListener('click', async function(e) {
-        const b = e.target.closest('button'); if (!b) return;
-        const id = parseInt(b.dataset.id), op = b.dataset.operacion, p = productos.find(x => x.id === id); if (!p) return;
-        const act = parseFloat(p.cantidad) || 0;
-        if (op === 'sumar') {
-            const c = parseFloat(prompt(`¿Cuánto vas a añadir de ${p.nombre}?`));
-            if (!isNaN(c) && c > 0) { await supabase.from('productos').update({ cantidad: parseFloat((act + c).toFixed(2)) }).eq('id', id); consultarDatosDeInternet(); }
-        } else if (op === 'restar') {
-            const c = parseFloat(prompt(`¿Cuánto vas a descontar de ${p.nombre}?`));
-            if (!isNaN(c) && c > 0 && act >= c) { await supabase.from('productos').update({ cantidad: parseFloat((act - c).toFixed(2)) }).eq('id', id); consultarDatosDeInternet(); }
-            else if (act < c) alert("Cantidad insuficiente.");
-        } else if (op === 'eliminar' && confirm("¿Eliminar artículo?")) {
-            await supabase.from('productos').delete().eq('id', id); consultarDatosDeInternet();
+// 2. Funciones de Control de Mercancía Libres de Contexto Interno
+window.sumarStock = function(id) {
+    const prod = productos.find(function(p) { return p.id === id; });
+    if (prod) {
+        const val = parseFloat(prompt(`¿Cuánta mercancía vas a INGRESAR de ${prod.nombre}?`));
+        if (!isNaN(val) && val > 0) {
+            prod.cantidad = parseFloat((prod.cantidad + val).toFixed(2));
+            const nuevaFecha = prompt(`¿Deseas actualizar la fecha de vencimiento? (AAAA-MM-DD)`, prod.caducidad);
+            if (nuevaFecha !== null) prod.caducidad = nuevaFecha;
+            
+            localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
+            if (window.actualizarPantalla) window.actualizarPantalla();
         }
-    });
-}
-
-if (fProd) {
-    fProd.addEventListener('submit', async function(e) {
-        e.preventDefault(); if (!supabase) return;
-        const nuevo = {
-            nombre: document.getElementById('nombre').value, cantidad: parseFloat(document.getElementById('cantidad').value) || 0,
-            unidad: document.getElementById('unidad').value, categoria: document.getElementById('categoria').value,
-            stockMinimo: parseFloat(document.getElementById('stock-minimo').value) || 0, caducidad: document.getElementById('caducidad').value,
-            usuario: usuarioActivo ? usuarioActivo.nombre : "Desconocido"
-        };
-        const { error } = await supabase.from('productos').insert([nuevo]);
-        if (!error) { fProd.reset(); document.getElementById('stock-minimo').value = "1"; consultarDatosDeInternet(); }
-    });
-}
-
-if (buscador) buscador.addEventListener('input', () => { paginaActual = 1; actualizarInterfaz(); });
-if (document.getElementById('btn-anterior')) document.getElementById('btn-anterior').addEventListener('click', () => { if (paginaActual > 1) { paginaActual--; actualizarInterfaz(); } });
-
-if (document.getElementById('btn-exportar')) {
-    document.getElementById('btn-exportar').addEventListener('click', () => {
-        if (productos.length === 0) return;
-        const dEx = productos.map(x => ({ "Nombre": x.nombre, "Categoría": (x.categoria || "").toUpperCase(), "Cantidad": x.cantidad, "Unidad": x.unidad }));
-        const hoja = XLSX.utils.json_to_sheet(dEx); const libro = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(libro, hoja, "Inventario"); XLSX.writeFile(libro, `Inventario_Molarepa.xlsx`);
-    });
-}
-
-function configurarPermisosPorRol() {
-    const sF = document.querySelector('.formulario'), sR = document.querySelector('.resumen'), bE = document.getElementById('btn-exportar');
-    const esEnc = usuarioActivo.rol === 'encargada';
-    if (sF) sF.style.display = esEnc ? 'block' : 'none'; if (sR) sR.style.display = esEnc ? 'block' : 'none'; if (bE) bE.style.display = esEnc ? 'block' : 'none';
-}
-
-function actualizarInterfaz() {
-    if (!lProd) return; lProd.innerHTML = '';
-    let cAl = document.getElementById('panel-alarmas');
-    if (!cAl) {
-        cAl = document.createElement('div'); cAl.id = 'panel-alarmas'; cAl.style.marginTop = '1rem';
-        const sR = document.querySelector('.resumen'); if (sR) sR.appendChild(cAl);
     }
-    cAl.innerHTML = '';
+};
 
-    const bE = document.getElementById('btn-exportar'), cPag = document.getElementById('controles-paginacion');
-    if (productos.length === 0) {
-        document.getElementById('mensaje-vacio').style.display = 'block'; if (bE) bE.style.display = 'none';
-        if (buscador) buscador.style.display = 'none'; if (cPag) cPag.style.display = 'none';
-        totalProductosTxt.textContent = "0"; stockBajoTxt.textContent = "0"; porCaducarTxt.textContent = "0"; return;
-    } else {
-        document.getElementById('mensaje-vacio').style.display = 'none'; if (buscador) buscador.style.display = 'block'; if (cPag) cPag.style.display = 'flex';
+window.restarStock = function(id) {
+    const prod = productos.find(function(p) { return p.id === id; });
+    if (prod) {
+        const val = parseFloat(prompt(`¿Cuánto vas a RETIRAR/SACAR de ${prod.nombre}?`));
+        if (!isNaN(val) && val > 0) {
+            if (prod.cantidad >= val) {
+                prod.cantidad = parseFloat((prod.cantidad - val).toFixed(2));
+                
+                localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
+                if (window.actualizarPantalla) window.actualizarPantalla();
+            } else {
+                alert(`¡Error! Existencias insuficientes.`);
+            }
+        }
+    }
+};
+
+window.eliminarProducto = function(id) {
+    if (confirm("¿Borrar permanentemente este ítem del inventario?")) {
+        productos = productos.filter(function(p) { return p.id !== id; });
+        localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
+        if (window.actualizarPantalla) window.actualizarPantalla();
+    }
+};
+
+// 3. Orquestador de Eventos de la Interfaz
+document.addEventListener('DOMContentLoaded', function() {
+    const pantallaLogin = document.getElementById('pantalla-login');
+    const contenidoApp = document.getElementById('contenido-app');
+    const pinEntrada = document.getElementById('pin-entrada');
+    const btnLogin = document.getElementById('btn-login');
+    const errorLogin = document.getElementById('error-login');
+    const nombreUsuarioActivo = document.getElementById('nombre-usuario-activo');
+    const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
+    const formulario = document.getElementById('formulario-producto');
+    const listaProductos = document.getElementById('lista-productos');
+    const mensajeVacio = document.getElementById('mensaje-vacio');
+    const btnExportar = document.getElementById('btn-exportar');
+    const buscador = document.getElementById('buscador');
+
+    const totalProductosTxt = document.getElementById('total-productos');
+    const stockBajoTxt = document.getElementById('stock-bajo');
+    const porCaducarTxt = document.getElementById('por-caducar');
+
+    if (pantallaLogin) pantallaLogin.style.display = 'flex';
+    if (contenidoApp) contenidoApp.style.display = 'none';
+
+    if (btnLogin) btnLogin.addEventListener('click', login);
+    if (pinEntrada) pinEntrada.addEventListener('keypress', function(e) { if (e.key === 'Enter') login(); });
+    
+    if (btnCerrarSesion) {
+        btnCerrarSesion.addEventListener('click', function(e) {
+            e.preventDefault();
+            usuarioActivo = "";
+            if (pinEntrada) pinEntrada.value = '';
+            if (pantallaLogin) pantallaLogin.style.display = 'flex';
+            if (contenidoApp) contenidoApp.style.display = 'none';
+        });
     }
 
-    const term = buscador ? buscador.value.toLowerCase() : ""; const fil = productos.filter(x => x.nombre && x.nombre.toLowerCase().includes(term));
-    const totPag = Math.ceil(fil.length / pPorPag) || 1; if (paginaActual > totPag) paginaActual = totPag;
-    const idx = (paginaActual - 1) * pPorPag; const vis = fil.slice(idx, idx + pPorPag);
-
-    const infoP = document.getElementById('info-pagina'), bAnt = document.getElementById('btn-anterior'), bSig = document.getElementById('btn-siguiente');
-    if (infoP) infoP.textContent = `Página ${paginaActual} de ${totPag}`; if (bAnt) bAnt.disabled = (paginaActual === 1);
-
-    const clonSig = bSig.cloneNode(true); bSig.parentNode.replaceChild(clonSig, bSig);
-    clonSig.disabled = (paginaActual === totPag); clonSig.addEventListener('click', () => { if (paginaActual < totPag) { paginaActual++; actualizarInterfaz(); } });
-
-    const hoy = new Date(); let msgAl = "", uRol = usuarioActivo ? usuarioActivo.rol : "";
-
-    vis.forEach(p => {
-        const li = document.createElement('li'); li.className = `producto-item cat-${p.categoria || 'otros'}`;
-        const cantP = parseFloat(p.cantidad) || 0, minP = parseFloat(p.stockMinimo) || 0, esB = cantP <= minP;
-        let esC = false, infoC = 'No registra';
-        if (p.caducidad) { const dD = Math.ceil((new Date(p.caducidad) - hoy) / 86400000); infoC = p.caducidad; if (dD <= 3) esC = true; }
-
-        let btnH = "";
-        if (uRol === 'encargada') {
-            btnH = `<button data-id="${p.id}" data-operacion="sumar" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➕</button>
-                    <button data-id="${p.id}" data-operacion="restar" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">➖</button>
-                    <button data-id="${p.id}" data-operacion="eliminar" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>`;
-        } else if (uRol === 'almacenista') {
-            btnH = `<button data-id="${p.id}" data-operacion="sumar" style="background:#2ecc71; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold; margin-right:5px;">📥 Recibir</button>
-                    <button data-id="${p.id}" data-operacion="restar" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold;">📤 Sacar</button>`;
-        } else if (uRol === 'cocinero') {
-            btnH = `<button data-id="${p.id}" data-operacion="restar" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold; margin-right:5px;">🍳 Gastar</button>
-                    <button data-id="${p.id}" data-operacion="sumar" style="background:#3498db; color:white; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-weight:bold;">📦 Producir</button>`;
+    function login() {
+        if (!pinEntrada) return;
+        const pin = pinEntrada.value.trim();
+        if (USUARIOS[pin]) {
+            usuarioActivo = USUARIOS[pin];
+            if (errorLogin) errorLogin.style.display = 'none';
+            if (pantallaLogin) pantallaLogin.style.display = 'none';
+            if (contenidoApp) contenidoApp.style.display = 'block';
+            if (nombreUsuarioActivo) nombreUsuarioActivo.textContent = usuarioActivo;
+            actualizarInterfaz();
+        } else {
+            if (errorLogin) errorLogin.style.display = 'block';
+            pinEntrada.value = '';
         }
+    }
+
+    if (formulario) {
+        formulario.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value;
+            const cantidad = parseFloat(document.getElementById('cantidad').value);
+            const unidad = document.getElementById('unidad').value;
+            const categoria = document.getElementById('categoria').value; 
+            const stockMinimo = parseFloat(document.getElementById('stock-minimo').value);
+            const caducidad = document.getElementById('caducidad').value;
+
+            productos.push({ id: Date.now(), nombre: nombre, cantidad: cantidad, unidad: unidad, categoria: categoria, stockMinimo: stockMinimo, caducidad: caducidad });
+            localStorage.setItem('inventario_restaurante', JSON.stringify(productos));
+            formulario.reset();
+            document.getElementById('stock-minimo').value = "1";
+            actualizarInterfaz();
+        });
+    }
+
+    if (buscador) buscador.addEventListener('input', actualizarInterfaz);
+    
+    if (btnExportar) {
+        btnExportar.addEventListener('click', function() {
+            if (productos.length === 0 || typeof XLSX === 'undefined') return;
+            const hoja = XLSX.utils.json_to_sheet(productos);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Inventario");
+            XLSX.writeFile(libro, "Reporte.xlsx");
+        });
+    }
+
+    window.actualizarPantalla = actualizarInterfaz;
+
+    function actualizarInterfaz() {
+        if (!listaProductos) return;
+        listaProductos.innerHTML = '';
+
+        // Contadores para el resumen del inventario
+        let totalBajo = 0;
+        let totalCaduca = 0;
+
+        if (productos.length === 0) {
+            if (mensajeVacio) mensajeVacio.style.display = 'block';
+            if (totalProductosTxt) totalProductosTxt.textContent = "0";
+            if (stockBajoTxt) stockBajoTxt.textContent = "0";
+            if (porCaducarTxt) porCaducarTxt.textContent = "0";
+            return;
+        }
+        if (mensajeVacio) mensajeVacio.style.display = 'none';
+
+        const busq = buscador ? buscador.value.toLowerCase() : "";
+        const filtrados = productos.filter(function(p) { return p.nombre.toLowerCase().includes(busq); });
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+
+        filtrados.forEach(function(prod) {
+            const li = document.createElement('li');
+            li.className = `producto-item cat-${prod.categoria || 'otros'}`;
+            const bajo = prod.cantidad <= prod.stockMinimo;
+            if (bajo) totalBajo++;
+            
+            let esCriticoCaducidad = false;
+            if (prod.caducidad) {
+                const fechaCad = new Date(prod.caducidad + 'T00:00:00');
+                const dias = Math.ceil((fechaCad - hoy) / (1000 * 60 * 60 * 24));
+                if (dias <= 3 && dias >= 0) {
+                    esCriticoCaducidad = true;
+                    totalCaduca++;
+                }
+            }
+
+            li.innerHTML = `
+                <div class="producto-info">
+                    <h4>${prod.nombre}</h4>
+                    <p style="font-size:0.8rem; color:#888; text-transform:uppercase; margin:0;">🏷️ ${prod.categoria || 'otros'}</p>
+                    <p style="margin-top:2px; font-size:0.85rem;">Mínimo: ${prod.stockMinimo} | Vence: ${prod.caducidad || 'No registra'}</p>
+                </div>
+                <div class="producto-acciones" style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <span class="${bajo ? 'alerta-stock' : ''}" style="font-weight:bold; font-size:1.2rem;">${prod.cantidad} ${prod.unidad}</span>
+                    ${esCriticoCaducidad ? '<small class="alerta-caduca" style="color:red; font-weight:bold;">⚠️ ¡Por Caducar!</small>' : ''}
+                    <div style="margin-top: 5px;">
+                        <button onclick="sumarStock(${prod.id})" style="padding: 2px 8px; cursor: pointer;">+</button>
+                        <button onclick="restarStock(${prod.id})" style="padding: 2px 8px; cursor: pointer;">-</button>
+                        <button onclick="eliminarProducto(${prod.id})" style="padding: 2px 8px; cursor: pointer; background-color: #ff4d4d; color: white; border: none; border-radius: 3px;">🗑️</button>
+                    </div>
+                </div>
+            `;
+            listaProductos.appendChild(li);
+        });
+
+        // Actualizar tarjetas de resumen con los valores reales calculados
+        if (totalProductosTxt) totalProductosTxt.textContent = productos.length;
+        if (stockBajoTxt) stockBajoTxt.textContent = totalBajo;
+        if (porCaducarTxt) porCaducarTxt.textContent = totalCaduca;
+    }
+});
